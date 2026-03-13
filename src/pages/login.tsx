@@ -1,12 +1,31 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; 
+import { useAuth } from "../context/authContext";
 import "../App.css";
+import { EyeIcon, EyeOff } from "lucide-react";
+import { routes } from "../utils/routes";
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleForm = (e: React.FormEvent<HTMLFormElement>) => {
+  const { handleLogin, isLoading, error } = useAuth();
+  const navigate = useNavigate();
+
+  const handleForm = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert("Funcionalidad de acceso no implementada en esta demo.");
+    
+    try {
+      await handleLogin({ email: email, passwordd: password }); 
+      
+      navigate(routes.recepcion); 
+      
+    } catch (err) {
+
+      console.error("Fallo al iniciar sesión", err);
+    }
   };
 
   return (
@@ -32,6 +51,13 @@ function Login() {
               </p>
             </div>
 
+            {/* Renderizado de Errores (Si el backend dice "Credenciales incorrectas") */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200 text-center">
+                {error}
+              </div>
+            )}
+
             {/* Form */}
             <form className="space-y-5" onSubmit={handleForm}>
               {/* Email */}
@@ -41,6 +67,9 @@ function Login() {
                 </label>
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   placeholder="nombre@clinica.com"
                   className="w-full px-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-teal-50/50"
                 />
@@ -54,6 +83,9 @@ function Login() {
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                     placeholder="••••••••"
                     className="w-full px-4 py-3 pr-12 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-teal-50/50"
                   />
@@ -62,22 +94,25 @@ function Login() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-600 hover:text-teal-700 transition-colors"
                   >
-                    {showPassword ? (
-                      <>
-                        <p>viendo</p>
-                      </>
-                    ) : (
-                      <>
-                        <p>oculto</p>
-                      </>
-                    )}
+                    {showPassword ? <EyeIcon size={20} /> : <EyeOff size={20} />}
                   </button>
                 </div>
               </div>
 
               {/* Submit Button */}
-              <button className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white font-semibold py-3 rounded-xl transition-all transform hover:scale-105 mt-8 cursor-pointer">
-                Acceder al Sistema
+              <button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white font-semibold py-3 rounded-xl transition-all transform hover:scale-105 mt-8 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Conectando...
+                  </span>
+                ) : (
+                  "Acceder al Sistema"
+                )}
               </button>
             </form>
 
@@ -91,7 +126,6 @@ function Login() {
           </div>
         </div>
       </main>
-      );
     </>
   );
 }

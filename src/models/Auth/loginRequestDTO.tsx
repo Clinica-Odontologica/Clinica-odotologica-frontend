@@ -1,6 +1,6 @@
 export interface LoginRequestDTO {
-    username: string;
-    password: string;
+    email: string;
+    passwordd: string;
 }
 export interface LoginResponseDTO {
     id: number;
