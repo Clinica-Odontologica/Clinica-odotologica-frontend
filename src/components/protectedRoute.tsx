@@ -1,13 +1,16 @@
-import React, { useEffect } from 'react';
-import { useAuth } from '../context/authContext';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import { useAuth } from "../context/authContext";
+import { Navigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: Array<'ADMIN' | 'RECEPTIONIST' | 'DOCTOR'>;
+  allowedRoles?: Array<"ADMIN" | "RECEPTIONIST" | "DOCTOR">;
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  allowedRoles,
+}: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useAuth();
 
   useEffect(() => {
@@ -18,8 +21,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       }
 
       if (allowedRoles && user && user.role) {
-        const userRoleName = user.role.name.replace('ROLE_', '') as 'ADMIN' | 'RECEPTIONIST' | 'DOCTOR';
-        
+        const userRoleName = user.role.name.replace("ROLE_", "") as
+          | "ADMIN"
+          | "RECEPTIONIST"
+          | "DOCTOR";
+
         if (!allowedRoles.includes(userRoleName)) {
           <Navigate to="/unauthorized" />;
           return;
@@ -40,11 +46,14 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   if (allowedRoles && user && user.role) {
-    const userRoleName = user.role.name.replace('ROLE_', '') as 'ADMIN' | 'RECEPTIONIST' | 'DOCTOR';
+    const userRoleName = user.role.name.replace("ROLE_", "") as
+      | "ADMIN"
+      | "RECEPTIONIST"
+      | "DOCTOR";
     if (!allowedRoles.includes(userRoleName)) {
       return <Navigate to="/unauthorized" />;
     }

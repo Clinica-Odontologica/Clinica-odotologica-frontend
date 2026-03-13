@@ -1,29 +1,40 @@
-'use client';
-
-import React from "react"
-
-import {Link} from 'react-router-dom';
-import { Settings, Users, Pill, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Link } from "react-router-dom";
+import { Settings, Users, Pill, LogOut, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  currentPage: 'odontologos' | 'servicios' | 'usuarios';
+  currentPage: "odontologos" | "servicios" | "usuarios";
 }
 
 export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/';
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/";
   };
 
   const navItems = [
-    { id: 'odontologos', label: 'Gestión de Doctores', icon: Users, href: '/admin/odontologos' },
-    { id: 'servicios', label: 'Gestión de Servicios', icon: Pill, href: '/admin/servicios' },
-    { id: 'usuarios', label: 'Gestión de Usuarios', icon: Settings, href: '/admin/usuarios' },
+    {
+      id: "odontologos",
+      label: "Gestión de Doctores",
+      icon: Users,
+      href: "/admin/odontologos",
+    },
+    {
+      id: "servicios",
+      label: "Gestión de Servicios",
+      icon: Pill,
+      href: "/admin/servicios",
+    },
+    {
+      id: "usuarios",
+      label: "Gestión de Usuarios",
+      icon: Settings,
+      href: "/admin/usuarios",
+    },
   ];
 
   return (
@@ -36,7 +47,11 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-teal-50 rounded-lg md:hidden transition-colors"
             >
-              {sidebarOpen ? <X className="w-5 h-5 text-teal-600" /> : <Menu className="w-5 h-5 text-teal-600" />}
+              {sidebarOpen ? (
+                <X className="w-5 h-5 text-teal-600" />
+              ) : (
+                <Menu className="w-5 h-5 text-teal-600" />
+              )}
             </button>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center">
@@ -60,7 +75,7 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
         {/* Sidebar */}
         <aside
           className={`${
-            sidebarOpen ? 'w-64' : 'w-0'
+            sidebarOpen ? "w-64" : "w-0"
           } transition-all duration-300 bg-white border-r border-teal-100 hidden md:block md:w-64`}
         >
           <nav className="p-4 space-y-2">
@@ -72,8 +87,8 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
                   <div
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                       isActive
-                        ? 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-md'
-                        : 'text-slate-700 hover:bg-teal-50'
+                        ? "bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-md"
+                        : "text-slate-700 hover:bg-teal-50"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -88,23 +103,32 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
         {/* Mobile Navigation */}
         {sidebarOpen && (
           <div className="fixed inset-0 z-30 md:hidden">
-            <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setSidebarOpen(false)}
+            />
             <aside className="absolute left-0 top-16 bottom-0 w-64 bg-white border-r border-teal-100 shadow-lg">
               <nav className="p-4 space-y-2">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = currentPage === item.id;
                   return (
-                    <Link key={item.id} to={item.href} onClick={() => setSidebarOpen(false)}>
+                    <Link
+                      key={item.id}
+                      to={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                    >
                       <div
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                           isActive
-                            ? 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-md'
-                            : 'text-slate-700 hover:bg-teal-50'
+                            ? "bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-md"
+                            : "text-slate-700 hover:bg-teal-50"
                         }`}
                       >
                         <Icon className="w-5 h-5" />
-                        <span className="font-medium text-sm">{item.label}</span>
+                        <span className="font-medium text-sm">
+                          {item.label}
+                        </span>
                       </div>
                     </Link>
                   );
@@ -115,9 +139,7 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-8">
-          {children}
-        </main>
+        <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
     </div>
   );
