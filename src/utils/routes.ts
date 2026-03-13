@@ -11,8 +11,7 @@ export const routes = {
   login: "/",
 
   //Admin Pages
-  dashboard: "/dashboard",
-  dashboard_profile: "/dashboard/profile",
+    dashboard_profile: "/dashboard/profile",
 
   // Users Management
   dashboard_users: "/dashboard/usuarios",
