@@ -7,7 +7,7 @@ export interface LoginResponseDTO {
     username: string;
     fullname: string;
     email: string;
-    role: {
+    rol: {
         id: number;
         name: string;
     },

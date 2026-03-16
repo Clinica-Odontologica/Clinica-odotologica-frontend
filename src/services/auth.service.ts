@@ -1,6 +1,7 @@
 import axios from "axios";
 import type { LoginRequestDTO, LoginResponseDTO } from "../models/Auth/loginRequestDTO";
 import type { RegisterRequestDTO, RegisterResponseDTO } from "../models/Auth/registerDTO";
+import type {GlobalResponse}from "../models/Global/globalResponse";
 
 const Base_URL = import.meta.env.VITE_URL_API + "/auth";
 
@@ -10,9 +11,9 @@ export async function login(
 
     const url = `${Base_URL}/login`;
 
-    const res = await axios.post<LoginResponseDTO>(url, body);
+    const res = await axios.post<GlobalResponse<LoginResponseDTO>>(url, body);
 
-    return res.data;
+    return res.data.data;
 }
 
 export async function register(
@@ -21,7 +22,7 @@ export async function register(
 
     const url = `${Base_URL}/register`;
 
-    const res = await axios.post<RegisterResponseDTO>(url, body);
+    const res = await axios.post<GlobalResponse<RegisterResponseDTO>>(url, body);
 
-    return res.data;
+    return res.data.data;
 }

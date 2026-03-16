@@ -9,7 +9,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
-    handleLogin: (body: LoginRequestDTO) => Promise<void>;
+    handleLogin: (body: LoginRequestDTO) => Promise<LoginResponseDTO>;
     handleRegister: (body: RegisterRequestDTO) => Promise<void>;
     logout: () => void;
 }
@@ -44,13 +44,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsLoading(false);
     }, []);
 
-    const handleLogin = async (body: LoginRequestDTO) => {
+    const handleLogin = async (body: LoginRequestDTO): Promise<LoginResponseDTO> => {
         setIsLoading(true);
         setError(null);
         try {
             const response = await loginService(body);
             setUser(response);
             localStorage.setItem('authUser', JSON.stringify(response));
+            return response; 
         } catch (error: unknown) {
             const err = error as AxiosErrorType; 
             const errorMessage = err.response?.data?.message || 'Error al iniciar sesión';
