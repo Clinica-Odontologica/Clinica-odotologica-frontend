@@ -1,9 +1,12 @@
 export interface RegisterResponseDTO {
   id: number;
-  fullName: string;
   username: string;
+  fullName: string;
   email: string;
-  rol: string;
+  rol: {
+    id: number;
+    name: string;
+  };
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

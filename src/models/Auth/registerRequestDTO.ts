@@ -1,7 +1,10 @@
 export interface RegisterRequestDTO {
-  fullName: string;
   username: string;
+  fullname: string;
   email: string;
-  password: string;
-  rol: string;
+  passwordd: string;
+  role: {
+    id: number;
+    name: string;
+  };
 }

@@ -3,7 +3,10 @@ export interface LoginResponseDTO {
   username: string;
   fullname: string;
   email: string;
-  rol: string;
+  rol: {
+    id: number;
+    name: string;
+  };
   isActive: boolean;
   accessToken: string;
   refreshToken: string;
