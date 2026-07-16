@@ -1,11 +1,11 @@
-import { api } from "../utils/axiosInterceptor"; // Asegúrate de que la ruta coincida con tu carpeta
+import { api } from "../utils/axiosInterceptor"; 
 import type { UserResponseDTO } from "../models/usuario/userResponseDTO";
 import type { UserRequestDTO } from "../models/usuario/userRequestDTO";
 import type { UserUpdateRequestDTO } from "../models/usuario/userUpdateRequestDTO";
 import type { GlobalResponse } from "../models/Global/globalResponse";
 import type { Page } from "../models/Global/page";
 
-const ENDPOINT = "/tratamientos";
+const ENDPOINT = "/usuarios";
 
 export const userService = {
   getAllPaginated: async (

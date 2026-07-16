@@ -1,4 +1,4 @@
-import { api } from "../utils/axiosInterceptor"; // Asegúrate de que la ruta coincida con tu carpeta
+import { api } from "../utils/axiosInterceptor"; 
 import type { DoctorDTO } from "../models/doctor/doctorDTO";
 import type { DoctorRequestDTO } from "../models/doctor/doctorRequestDTO";
 import type { GlobalResponse } from "../models/Global/globalResponse";
@@ -11,7 +11,6 @@ export const doctorService = {
     page = 0,
     size = 10,
   ): Promise<GlobalResponse<Page<DoctorDTO>>> => {
-    // 3. Reemplazamos todos los "axios.get/post/put/delete" por "api.get/post/put/delete"
     const response = await api.get<GlobalResponse<Page<DoctorDTO>>>(
       `${ENDPOINT}/dashboard-paginated`,
       {

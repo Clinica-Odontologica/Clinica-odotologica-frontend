@@ -1,29 +1,30 @@
-import axios from "axios";
+import { api } from "../utils/axiosInterceptor"; 
 import type { ClinicalEntryRequestDTO } from "../models/clinical/clinicalEntryRequestDTO";
 import type { ClinicalEntryResponseDTO } from "../models/clinical/clinicalEntryResponseDTO";
 import type { GlobalResponse } from "../models/Global/globalResponse";
 import type { Page } from "../models/Global/page";
 
-const API_URL = `${import.meta.env.VITE_URL_API}/clinica`;
+const ENDPOINT = "/clinica";
 
 export const clinicalService = {
   getAllPaginated: async (
     page = 0,
     size = 10,
   ): Promise<GlobalResponse<Page<ClinicalEntryResponseDTO>>> => {
-    const response = await axios.get<
-      GlobalResponse<Page<ClinicalEntryResponseDTO>>
-    >(`${API_URL}/dashboard-paginated`, {
-      params: { page, size },
-    });
+    const response = await api.get<GlobalResponse<Page<ClinicalEntryResponseDTO>>>(
+      `${ENDPOINT}/dashboard-paginated`,
+      {
+        params: { page, size },
+      },
+    );
     return response.data;
   },
 
   getById: async (
     id: number,
   ): Promise<GlobalResponse<ClinicalEntryResponseDTO>> => {
-    const response = await axios.get<GlobalResponse<ClinicalEntryResponseDTO>>(
-      `${API_URL}/${id}`,
+    const response = await api.get<GlobalResponse<ClinicalEntryResponseDTO>>(
+      `${ENDPOINT}/${id}`,
     );
     return response.data;
   },
@@ -31,8 +32,8 @@ export const clinicalService = {
   save: async (
     entry: ClinicalEntryRequestDTO,
   ): Promise<GlobalResponse<void>> => {
-    const response = await axios.post<GlobalResponse<void>>(
-      `${API_URL}/save`,
+    const response = await api.post<GlobalResponse<void>>(
+      `${ENDPOINT}/save`,
       entry,
     );
     return response.data;

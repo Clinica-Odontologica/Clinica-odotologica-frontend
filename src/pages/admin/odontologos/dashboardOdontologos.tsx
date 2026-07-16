@@ -19,7 +19,6 @@ export default function DasboardOdontologos() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<DoctorDTO | null>(null);
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     lastName: "",

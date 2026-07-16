@@ -1,4 +1,4 @@
-import { api } from "../utils/axiosInterceptor"; // Asegúrate de que la ruta coincida con tu carpeta
+import { api } from "../utils/axiosInterceptor"; 
 import type { ServiceDTO } from "../models/service/serviceDTO";
 import type { GlobalResponse } from "../models/Global/globalResponse";
 import type { Page } from "../models/Global/page";
