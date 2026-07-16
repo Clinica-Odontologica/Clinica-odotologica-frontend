@@ -1,7 +1,13 @@
 export const routes = {
 
-  // Public - Landing
+  // Recepcionist Routes
   recepcion: "/reception",
+  recepcion_nuevos_turnos: "/reception/turnos/nuevo",
+  recepcion_pacientes: "/reception/pacientes",
+
+
+
+
   doctor: "/agenda",
   admin: "/dashboard",
 
@@ -31,4 +37,6 @@ export const routes = {
   dashboard_servicio_new: "/dashboard/servicio/nuevo",
   dashboard_servicio_edit: "/dashboard/servicio/edit/:id",
 
+  // Patients Management
+  dashboard_pacientes: "/dashboard/pacientes",
 };

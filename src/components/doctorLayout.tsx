@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { LogOut, Calendar, Stethoscope } from "lucide-react";
+import { useAuth } from "../context/authContext";
 
 export default function DoctorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const auth = useAuth()
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-teal-50">
       {/* Header */}
@@ -18,7 +20,7 @@ export default function DoctorLayout({
               </div>
               <div>
                 <p className="text-xs text-slate-500 font-medium">
-                  Dr. Sistema
+                  Dr. {auth.user?.fullname}
                 </p>
                 <p className="text-sm font-bold bg-gradient-to-r from-cyan-700 to-teal-700 bg-clip-text text-transparent">
                   Clínica Dental
@@ -51,7 +53,7 @@ export default function DoctorLayout({
       <footer className="border-t border-teal-100 bg-white/50 backdrop-blur-sm mt-12">
         <div className="max-w-7xl mx-auto px-6 py-6 text-center text-sm text-slate-600">
           <p>
-            © 2024 Sistema de Gestión Clínica Dental. Todos los derechos
+            © 2026 Sistema de Gestión Clínica Dental. Todos los derechos
             reservados.
           </p>
         </div>

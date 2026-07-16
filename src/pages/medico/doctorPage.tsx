@@ -1,229 +1,259 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  Clock,
-  User,
-  Phone,
+import { useState, useEffect } from "react";
+import { 
+  Calendar, 
+  Clock, 
+  CheckCircle2, 
   AlertCircle,
-  CheckCircle2,
-  Play,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  FileText
 } from "lucide-react";
 import DoctorLayout from "../../components/doctorLayout";
-
-// Mock data for today's appointments
-const todayAppointments = [
-  {
-    id: 1,
-    patientName: "Juan García López",
-    patientAge: 35,
-    patientPhone: "+34 612 345 678",
-    time: "09:00 AM",
-    treatmentType: "Consulta General",
-    status: "pending", // pending, attending, completed
-  },
-  {
-    id: 2,
-    patientName: "María Rodríguez",
-    patientAge: 28,
-    patientPhone: "+34 698 765 432",
-    time: "09:30 AM",
-    treatmentType: "Limpieza Dental",
-    status: "completed",
-  },
-  {
-    id: 3,
-    patientName: "Carlos Fernández",
-    patientAge: 45,
-    patientPhone: "+34 654 321 098",
-    time: "10:30 AM",
-    treatmentType: "Endodoncia",
-    status: "pending",
-  },
-  {
-    id: 4,
-    patientName: "Laura Martínez",
-    patientAge: 32,
-    patientPhone: "+34 687 543 210",
-    time: "11:00 AM",
-    treatmentType: "Ortodoncia",
-    status: "attending",
-  },
-  {
-    id: 5,
-    patientName: "Jorge López",
-    patientAge: 50,
-    patientPhone: "+34 623 456 789",
-    time: "12:00 PM",
-    treatmentType: "Extracciones",
-    status: "pending",
-  },
-];
+import { turnService } from "../../services/turn.service";
+import { clinicalService } from "../../services/clinical.service";
+import type { TurnResponseDTO } from "../../models/turn/turnResponseDTO";
+import { useAuth } from "../../context/authContext";
+import { toast } from "sonner";
 
 export default function DoctorPage() {
-  const [appointments, setAppointments] = useState(todayAppointments);
+  const { user } = useAuth();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [turns, setTurns] = useState<TurnResponseDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  console.log(
-    "Cargando agenda del médico con los siguientes turnos:",
-    setAppointments,
-  );
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-emerald-50 border-emerald-200 text-emerald-700";
-      case "attending":
-        return "bg-blue-50 border-blue-200 text-blue-700";
-      case "pending":
-        return "bg-amber-50 border-amber-200 text-amber-700";
-      default:
-        return "bg-slate-50 border-slate-200 text-slate-700";
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTurn, setSelectedTurn] = useState<TurnResponseDTO | null>(null);
+  const [clinicalData, setClinicalData] = useState({
+    diagnosis: '',
+    treatmentNotes: ''
+  });
+
+  const fetchAgenda = async () => {
+    if (!user || !user.id) return;
+    try {
+      setLoading(true);
+      const response = await turnService.getByDoctorAndDate(user.id, selectedDate);
+      if (response.ok) {
+        setTurns(response.data);
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Error al cargar la agenda");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "Completado";
-      case "attending":
-        return "En Atención";
-      case "pending":
-        return "Pendiente";
-      default:
-        return "Desconocido";
-    }
+  useEffect(() => {
+    fetchAgenda();
+  }, [selectedDate, user]);
+
+  const changeDate = (days: number) => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() + days);
+    setSelectedDate(date.toISOString().split('T')[0]);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle2 className="w-5 h-5" />;
-      case "attending":
-        return <AlertCircle className="w-5 h-5" />;
-      case "pending":
-        return <Clock className="w-5 h-5" />;
-      default:
-        return null;
+  const handleOpenModal = (turn: TurnResponseDTO) => {
+    setSelectedTurn(turn);
+    setClinicalData({ diagnosis: '', treatmentNotes: '' });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTurn(null);
+  };
+
+  const handleClinicalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTurn) return;
+
+    try {
+      const payload = {
+        turnId: selectedTurn.id,
+        diagnosis: clinicalData.diagnosis,
+        treatmentNotes: clinicalData.treatmentNotes
+      };
+      
+      const res = await clinicalService.save(payload);
+      if (res.ok) {
+        toast.success("Turno completado y guardado en la historia clínica.");
+        fetchAgenda(); // Refrescar turnos
+        handleCloseModal();
+      } else {
+        toast.error(res.message || "Error al completar el turno");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Ocurrió un error al guardar el registro clínico.");
     }
   };
 
   return (
     <DoctorLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-700 to-teal-700 bg-clip-text text-transparent">
-            Mi Agenda
-          </h1>
-          <p className="text-slate-600 mt-2">Turnos asignados para hoy</p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-teal-100 p-4">
-            <p className="text-xs text-slate-600 font-medium mb-1">
-              Total de Turnos
-            </p>
-            <p className="text-2xl font-bold text-cyan-700">
-              {appointments.length}
-            </p>
+        {/* Header with Date Navigation */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-teal-100 shadow-sm">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Mi Agenda</h2>
+            <p className="text-slate-500">Visualiza y gestiona tus turnos del día</p>
           </div>
-          <div className="bg-white rounded-xl border border-teal-100 p-4">
-            <p className="text-xs text-slate-600 font-medium mb-1">
-              Pendientes
-            </p>
-            <p className="text-2xl font-bold text-amber-600">
-              {appointments.filter((a) => a.status === "pending").length}
-            </p>
-          </div>
-          <div className="bg-white rounded-xl border border-teal-100 p-4">
-            <p className="text-xs text-slate-600 font-medium mb-1">
-              En Atención
-            </p>
-            <p className="text-2xl font-bold text-blue-600">
-              {appointments.filter((a) => a.status === "attending").length}
-            </p>
-          </div>
-          <div className="bg-white rounded-xl border border-teal-100 p-4">
-            <p className="text-xs text-slate-600 font-medium mb-1">
-              Completados
-            </p>
-            <p className="text-2xl font-bold text-emerald-600">
-              {appointments.filter((a) => a.status === "completed").length}
-            </p>
-          </div>
-        </div>
-
-        {/* Appointments List */}
-        <div className="space-y-3">
-          {appointments.map((appointment) => (
-            <div
-              key={appointment.id}
-              className={`border rounded-xl p-5 bg-white transition-all hover:shadow-md ${getStatusColor(appointment.status)}`}
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => changeDate(-1)}
+              className="p-2 hover:bg-teal-50 rounded-lg border border-teal-100 transition-colors"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-200 to-teal-200 rounded-lg flex items-center justify-center">
-                      <User className="w-5 h-5 text-teal-700" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">
-                        {appointment.patientName}
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        {appointment.patientAge} años
-                      </p>
-                    </div>
-                  </div>
+              <ChevronLeft className="w-5 h-5 text-teal-600" />
+            </button>
+            <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 rounded-xl border border-teal-200">
+              <Calendar className="w-4 h-4 text-teal-600" />
+              <input 
+                type="date" 
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent border-none focus:outline-none text-sm font-bold text-teal-800"
+              />
+            </div>
+            <button 
+              onClick={() => changeDate(1)}
+              className="p-2 hover:bg-teal-50 rounded-lg border border-teal-100 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5 text-teal-600" />
+            </button>
+          </div>
+        </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4 text-teal-600" />
-                      <span>{appointment.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4 text-teal-600" />
-                      <span>{appointment.patientPhone}</span>
-                    </div>
-                    <div className="col-span-2 md:col-span-1">
-                      <span className="inline-block bg-teal-100 text-teal-700 text-xs font-semibold px-3 py-1 rounded-lg">
-                        {appointment.treatmentType}
-                      </span>
+        {/* Turns List */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-teal-100">
+              <Loader2 className="w-10 h-10 text-teal-500 animate-spin mb-4" />
+              <p className="text-slate-500">Cargando turnos...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 bg-white rounded-2xl border border-teal-100">
+              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+              <p className="text-red-600 font-medium">{error}</p>
+            </div>
+          ) : turns.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-2xl border border-teal-100">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-slate-300" />
+              </div>
+              <p className="text-slate-500 font-medium">No hay turnos programados para esta fecha</p>
+            </div>
+          ) : (
+            turns.map((turn) => (
+              <div 
+                key={turn.id}
+                className="group bg-white p-5 rounded-2xl border border-teal-100 hover:border-teal-300 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-teal-50 rounded-xl flex flex-col items-center justify-center border border-teal-100 group-hover:bg-teal-600 group-hover:border-teal-600 transition-colors">
+                    <Clock className="w-4 h-4 text-teal-600 group-hover:text-white mb-1" />
+                    <span className="text-xs font-bold text-teal-800 group-hover:text-white">{turn.time}</span>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-900">{turn.patient.name} {turn.patient.last_name}</h4>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {turn.treatments.map(t => (
+                        <span key={t.id} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-cyan-50 text-cyan-700 rounded-md border border-cyan-100">
+                          {t.name}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/80 border border-current text-sm font-medium">
-                    {getStatusIcon(appointment.status)}
-                    <span>{getStatusLabel(appointment.status)}</span>
+                <div className="flex items-center gap-3 self-end md:self-center">
+                  <div className="text-right mr-4 hidden md:block">
+                    <p className="text-xs text-slate-500 font-medium">Estado</p>
+                    <p className={`text-sm font-bold ${
+                      turn.status === 'COMPLETADO' ? 'text-green-600' : 'text-amber-600'
+                    }`}>
+                      {turn.status}
+                    </p>
                   </div>
-
-                  {appointment.status === "pending" && (
-                    <Link
-                      to={`/medico/atencion/${appointment.id}`}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white font-medium text-sm rounded-lg transition-all transform hover:scale-105"
+                  
+                  {turn.status !== 'COMPLETADO' && turn.status !== 'CANCELADO' && (
+                    <button 
+                      onClick={() => handleOpenModal(turn)}
+                      className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm"
                     >
-                      <Play className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4" />
                       Atender
-                    </Link>
+                    </button>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
-
-        {/* Empty State */}
-        {appointments.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl border border-teal-100">
-            <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-600 font-medium">No hay turnos para hoy</p>
-            <p className="text-sm text-slate-500 mt-1">
-              Vuelve más tarde para ver tus próximas citas
-            </p>
-          </div>
-        )}
       </div>
+
+      {/* Clinical Entry Modal */}
+      {isModalOpen && selectedTurn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={handleCloseModal} />
+          <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full">
+            <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 flex items-center gap-3">
+              <FileText className="w-6 h-6 text-teal-600" />
+              <h2 className="text-xl font-bold text-slate-900">
+                Atención Médica - {selectedTurn.patient.name} {selectedTurn.patient.last_name}
+              </h2>
+            </div>
+
+            <form onSubmit={handleClinicalSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Diagnóstico</label>
+                <textarea
+                  value={clinicalData.diagnosis}
+                  onChange={(e) => setClinicalData({ ...clinicalData, diagnosis: e.target.value })}
+                  required
+                  rows={3}
+                  className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 resize-none"
+                  placeholder="Ingrese el diagnóstico del paciente..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Notas del Tratamiento</label>
+                <textarea
+                  value={clinicalData.treatmentNotes}
+                  onChange={(e) => setClinicalData({ ...clinicalData, treatmentNotes: e.target.value })}
+                  required
+                  rows={4}
+                  className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 resize-none"
+                  placeholder="Describa el procedimiento realizado, medicamentos recetados o indicaciones..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="flex-1 px-4 py-2 border border-teal-200 text-slate-700 rounded-lg hover:bg-teal-50 transition-colors font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+                >
+                  Finalizar Turno
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DoctorLayout>
   );
 }

@@ -1,16 +1,19 @@
-import { Calendar, Users, Plus, LogOut, Menu } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Calendar, Users, LogOut, Menu } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { routes } from "../utils/routes";
+import { useAuth } from "../context/authContext";
 
 export function ReceptionLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const auth = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
       {/* Sidebar */}
       <aside
         className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
+          sidebarOpen ? "w-64" : "w-20"
         } bg-white border-r border-teal-100 transition-all duration-300 fixed h-full shadow-lg`}
       >
         {/* Logo */}
@@ -19,7 +22,9 @@ export function ReceptionLayout({ children }: { children: React.ReactNode }) {
             <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">D</span>
             </div>
-            {sidebarOpen && <span className="font-bold text-slate-900">Clínica Dental</span>}
+            {sidebarOpen && (
+              <span className="font-bold text-slate-900">Clínica Dental</span>
+            )}
           </div>
         </div>
 
@@ -27,8 +32,8 @@ export function ReceptionLayout({ children }: { children: React.ReactNode }) {
         {sidebarOpen && (
           <div className="p-4 border-b border-teal-100">
             <div className="text-sm">
-              <p className="font-semibold text-slate-900">María García</p>
-              <p className="text-xs text-teal-600">Recepcionista</p>
+              <p className="font-semibold text-slate-900">{auth.user?.username}</p>
+              <p className="text-xs text-teal-600">{auth.user?.rol.name}</p>
             </div>
           </div>
         )}
@@ -36,25 +41,18 @@ export function ReceptionLayout({ children }: { children: React.ReactNode }) {
         {/* Navigation */}
         <nav className="p-4 space-y-2">
           <Link
-            to="/reception/dashboard"
+            to={routes.recepcion}
             className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-cyan-100 to-teal-100 text-teal-700 font-medium transition-colors hover:from-cyan-200 hover:to-teal-200"
           >
             <Calendar className="w-5 h-5" />
-            {sidebarOpen && 'Agenda'}
+            {sidebarOpen && "Agenda"}
           </Link>
           <Link
-            to="/reception/pacientes"
+            to={routes.recepcion_pacientes}
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-teal-50 transition-colors"
           >
             <Users className="w-5 h-5" />
-            {sidebarOpen && 'Pacientes'}
-          </Link>
-          <Link
-            to="/reception/turnos/nuevo"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-teal-50 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            {sidebarOpen && 'Nuevo Turno'}
+            {sidebarOpen && "Pacientes"}
           </Link>
         </nav>
 
@@ -68,7 +66,9 @@ export function ReceptionLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300`}>
+      <div
+        className={`${sidebarOpen ? "ml-64" : "ml-20"} transition-all duration-300`}
+      >
         {/* Header */}
         <header className="bg-white border-b border-teal-100 shadow-sm sticky top-0 z-40">
           <div className="px-8 py-4 flex items-center justify-between">

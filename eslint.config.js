@@ -16,14 +16,7 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
-      prettier, // Must be last to override other configs
     ],
-    plugins: {
-      prettier: pluginPrettier,
-    },
-    rules: {
-      'prettier/prettier': 'error', // Enable Prettier rules
-    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

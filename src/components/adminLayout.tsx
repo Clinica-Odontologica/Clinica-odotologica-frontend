@@ -1,39 +1,74 @@
 import { Link } from "react-router-dom";
-import { Settings, Users, Pill, LogOut, Menu, X } from "lucide-react";
+import {
+  Settings,
+  Users,
+  Pill,
+  LogOut,
+  Menu,
+  X,
+  Gauge,
+  BriefcaseMedical,
+  LayoutDashboardIcon,
+} from "lucide-react";
 import { useState } from "react";
+import { routes } from "../utils/routes";
+import { useAuth } from "../context/authContext";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  currentPage: "odontologos" | "servicios" | "usuarios";
+  currentPage:
+    | "odontologos"
+    | "servicios"
+    | "usuarios"
+    | "pacientes"
+    | "dashboard"
+    | "perfil";
 }
 
 export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/";
+    logout();
   };
 
   const navItems = [
     {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Gauge,
+      href: routes.admin,
+    },
+    {
       id: "odontologos",
       label: "Gestión de Doctores",
+      icon: BriefcaseMedical,
+      href: routes.dashboard_odontologos,
+    },
+    {
+      id: "pacientes",
+      label: "Gestión de Pacientes",
       icon: Users,
-      href: "/admin/odontologos",
+      href: routes.dashboard_pacientes,
     },
     {
       id: "servicios",
       label: "Gestión de Servicios",
       icon: Pill,
-      href: "/admin/servicios",
+      href: routes.dashboard_servicios,
     },
     {
       id: "usuarios",
       label: "Gestión de Usuarios",
       icon: Settings,
-      href: "/admin/usuarios",
+      href: routes.dashboard_users,
+    },
+    {
+      id: "perfil",
+      label: "Mi Perfil",
+      icon: Settings,
+      href: routes.dashboard_profile,
     },
   ];
 
@@ -55,9 +90,11 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
             </button>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center">
-                <Settings className="w-5 h-5 text-white" />
+                <LayoutDashboardIcon className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900">Admin Panel</h1>
+              <h1 className="text-xl font-bold text-slate-900">
+                Clinica Odontológica
+              </h1>
             </div>
           </div>
 

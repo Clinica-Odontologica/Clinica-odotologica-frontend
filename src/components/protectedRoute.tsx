@@ -20,8 +20,8 @@ export function ProtectedRoute({
         return;
       }
 
-      if (allowedRoles && user && user.role) {
-        const userRoleName = user.role.name.replace("ROLE_", "") as
+      if (allowedRoles && user && user.rol) {
+        const userRoleName = user.rol.name.replace("ROLE_", "") as
           | "ADMIN"
           | "RECEPTIONIST"
           | "DOCTOR";
@@ -49,8 +49,8 @@ export function ProtectedRoute({
     return <Navigate to="/" />;
   }
 
-  if (allowedRoles && user && user.role) {
-    const userRoleName = user.role.name.replace("ROLE_", "") as
+  if (allowedRoles && user && user.rol) {
+    const userRoleName = user.rol.name.replace("ROLE_", "") as
       | "ADMIN"
       | "RECEPTIONIST"
       | "DOCTOR";
