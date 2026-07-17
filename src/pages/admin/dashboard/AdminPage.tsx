@@ -2,6 +2,7 @@ import { ProtectedRoute } from "../../../components/protectedRoute";
 import { useAuth } from "../../../context/authContext";
 import { Card } from "../../../components/ui/card/card";
 import { AdminLayout } from "../../../components/adminLayout";
+import IngresosCharts from "../../../components/recharts/IngresosCharts";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ export default function AdminPage() {
             <div className="mb-8 flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  Dashboard
+                  Panel de Administración
                 </h1>
                 <p className="mt-1 text-muted-foreground">
                   Bienvenido,{" "}
@@ -26,18 +27,11 @@ export default function AdminPage() {
 
             {/* Role-specific content */}
             <div className="mt-8">
-              {user?.rol.name === "ADMIN" && (
-                <Card className="p-6 border border-border">
-                  <h2 className="mb-4 text-lg font-semibold text-foreground">
-                    Panel de Administrador
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Aquí irán las funciones de administración del sistema...
-                  </p>
-                </Card>
+              {user?.rol.name === "ROLE_ADMIN" && (
+                <IngresosCharts data={[]} name="DEMANDA" />
               )}
 
-              {user?.rol.name === "DOCTOR" && (
+              {user?.rol.name === "ROLE_DOCTOR" && (
                 <Card className="p-6 border border-border">
                   <h2 className="mb-4 text-lg font-semibold text-foreground">
                     Panel de Doctor
@@ -48,7 +42,7 @@ export default function AdminPage() {
                 </Card>
               )}
 
-              {user?.rol.name === "RECEPTIONIST" && (
+              {user?.rol.name === "ROLE_RECEPTIONIST" && (
                 <Card className="p-6 border border-border">
                   <h2 className="mb-4 text-lg font-semibold text-foreground">
                     Panel de Recepción

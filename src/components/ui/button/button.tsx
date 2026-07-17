@@ -1,57 +1,75 @@
-import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
-import { cva, type VariantProps } from 'class-variance-authority'
+import React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { twMerge } from "tailwind-merge";
+import { Loader2 } from "lucide-react"; // Aprovechamos tu librería de iconos
 
-import { cn } from '../../../utils/utils'
-
-const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+// 1. RECETA DE ESTILOS CON CVA
+// eslint-disable-next-line react-refresh/only-export-components
+export const buttonVariants = cva(
+  // -> Estilos BASE: Se aplican a absolutamente todos los botones
+  "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none active:scale-[0.98]",
   {
+    // -> VARIANTES VISUALES
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        outline:
-          'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+        primary: "bg-gradient-to-r from-cyan-500 to-teal-600 text-white shadow-md",// Ideal para acciones principales
+        secondary: "mt-4 px-4 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition-colors", // Ideal para acciones secundarias o menos importantes
+        danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm", // Ideal para acciones destructivas (borrar)
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'h-10 w-10',
+        sm: "h-9 px-3 text-sm",
+        md: "h-11 px-5 text-base",
+        lg: "h-12 px-6 text-lg",
+        icon: "h-10 w-10 justify-center p-0", // Especial para botones con solo un icono adentro
       },
     },
+    // -> VALORES POR DEFECTO (si no le especificas nada al usarlo)
     defaultVariants: {
-      variant: 'default',
-      size: 'default',
+      variant: "primary",
+      size: "md",
     },
-  },
-)
+  }
+);
 
+// 2. TIPADO EN TYPESCRIPT
+// Combinamos las propiedades nativas de un botón HTML + las variantes que creamos en CVA
 export interface ButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  loading?: boolean; // Añadimos nuestra propiedad personalizada de carga
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button'
+// 3. COMPONENTE CON FORWARDREF
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    { 
+      className, 
+      variant, 
+      size, 
+      loading = false, 
+      disabled, 
+      children, 
+      ...props 
+    }, 
+    ref
+  ) => {
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+      <button
         ref={ref}
+        // Si está cargando, bloqueamos el clic automáticamente por seguridad
+        disabled={disabled || loading}
+        // twMerge evita conflictos si le pasas clases extra por className
+        className={twMerge(buttonVariants({ variant, size }), className)}
         {...props}
-      />
-    )
-  },
-)
-Button.displayName = 'Button'
-//eslint-disable-next-line
-export { Button, buttonVariants }
+      >
+        {/* Spinner animado automático si loading es true */}
+        {loading && <Loader2 className="animate-spin" size={size === "sm" ? 16 : 18} />}
+        {children}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button";
+
+export default Button;
