@@ -13,7 +13,7 @@ export const userService = {
     size = 10,
   ): Promise<GlobalResponse<Page<UserResponseDTO>>> => {
     const response = await api.get<GlobalResponse<Page<UserResponseDTO>>>(
-      `${ENDPOINT}/dashboard-paginated`,
+      `${ENDPOINT}`,
       {
         params: { page, size },
       },
