@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import {
   Settings,
   Users,
+  User,
   Pill,
   LogOut,
   Menu,
@@ -67,7 +68,7 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
     {
       id: "perfil",
       label: "Mi Perfil",
-      icon: Settings,
+      icon: User,
       href: routes.dashboard_profile,
     },
   ];
