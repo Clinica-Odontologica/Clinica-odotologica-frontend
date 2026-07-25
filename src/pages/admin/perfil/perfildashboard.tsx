@@ -3,11 +3,107 @@ import { Card } from "../../../components/ui/card/card";
 import { Button } from "../../../components/ui/button/button";
 import { useAuth } from "../../../context/authContext";
 import { Mail, Shield, Key, BadgeCheck, Edit } from "lucide-react";
+import { useState, useEffect } from "react";
+// Importamos los DTOs correctos que compartiste
+import type { UserResponseDTO , UserUpdateRequestDTO} from "../../../models/usuario/userResponseDTO"; 
+import { userService } from "../../../services/user.service";
 
 export default function Perfildashboard() {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // 1. NUEVO ESTADO: Aquí guardaremos la data fresca que viene de la API
+  const [profileData, setProfileData] = useState<UserResponseDTO | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    fullname: "",
+    username: "",
+    email: "",
+    password: "", // Opcional según tu DTO
+  });
 
-  // Función helper para que el rol no se vea como "ROLE_ADMIN" en crudo
+  const fetchProfile = async () => {
+    if (!user?.id) return;
+    try {
+      setLoading(true);
+      const response = await userService.getById(user.id);
+      
+      if (response.ok) {
+        // Guardamos la data real de la BD en el estado
+        setProfileData(response.data);
+      } else {
+        setError(response.message);
+        console.error("Error fetching profile:", error);
+      }
+    } catch (err) {
+      setError("Error al cargar el perfil");
+      console.error("Profile fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const handleOpenModal = () => {
+    // 2. Pre-llenamos el formulario con la data más fresca de profileData
+    if (profileData) {
+      setFormData({
+        fullname: profileData.fullname || "",
+        username: profileData.username || "",
+        email: profileData.email || "",
+        password: "", // Siempre lo dejamos vacío por seguridad
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileData) return;
+
+    try {
+      setIsSaving(true);
+      
+      // 3. Armamos el payload exacto como lo pide tu UserUpdateRequestDTO
+      const payload: UserUpdateRequestDTO = {
+        username: formData.username,
+        fullname: formData.fullname,
+        email: formData.email,
+        rol: profileData.rol, // Mantenemos el rol original
+        isActive: profileData.isActive, // Mantenemos el estado original
+      };
+
+      // Solo enviamos el password si el usuario escribió algo nuevo
+      if (formData.password.trim() !== "") {
+        payload.password = formData.password;
+      }
+
+      const response = await userService.update(profileData.id, payload);
+      
+      if (response.ok) {
+        await fetchProfile(); // Recargamos los datos visuales
+        handleCloseModal();
+      } else {
+        alert("Error al actualizar: " + response.message);
+      }
+    } catch (err) {
+      alert("Error al guardar los cambios");
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const formatRole = (role: string | undefined) => {
     if (role === "ROLE_ADMIN") return "Administrador del Sistema";
     if (role === "ROLE_DOCTOR") return "Odontólogo";
@@ -15,43 +111,40 @@ export default function Perfildashboard() {
     return role || "Usuario";
   };
 
-  // Fallback seguro por si el nombre no carga al instante
-  const userName = user?.username || "Joao";
+  // Usamos profileData (datos frescos) y si aún no cargan, el contexto user
+  const displayData = profileData || user;
+  const userName = profileData?.fullname || user?.username || "Usuario";
   const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <AdminLayout currentPage={"perfil"}>
-      {/* Contenedor centralizado para que no ocupe todo el ancho en pantallas gigantes */}
       <main className="mx-auto max-w-4xl p-6 flex flex-col gap-6">
         
-        {/* Encabezado de la página */}
+        {/* Encabezado */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Mi Perfil</h1>
-            <p className="mt-1 text-slate-500">Gestiona tu información personal y credenciales</p>
+            <p className="mt-1 text-slate-500">Gestiona tu información personal</p>
           </div>
-          <Button variant="outline" size="sm">
+          {/* El botón ya no necesita enviar parámetros */}
+          <Button variant="outline" size="sm" onClick={handleOpenModal}>
             <Edit size={16} />
             Editar Datos
           </Button>
         </div>
 
-        {/* Tarjeta 1: Presentación Visual (Banner y Avatar) */}
+        {/* Tarjeta 1: Banner y Avatar */}
         <Card className="overflow-hidden border border-border p-0 shadow-sm">
-          {/* Banner con el degradado de tu tema */}
           <div className="h-24 w-full bg-gradient-to-r from-teal-500 to-cyan-600"></div>
-          
           <div className="relative px-6 pb-6">
-            {/* Avatar Flotante */}
             <div className="absolute -top-12 flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-slate-100 text-4xl font-bold text-teal-700 shadow-md">
               {userInitial}
             </div>
-
             <div className="pt-14">
               <h2 className="text-2xl font-bold text-slate-800">{userName}</h2>
               <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-slate-500">
                 <Shield size={16} className="text-teal-600" />
-                {formatRole(user?.rol.name)}
+                {formatRole(displayData?.rol.toString())}
               </p>
             </div>
           </div>
@@ -62,22 +155,18 @@ export default function Perfildashboard() {
           <h3 className="mb-6 border-b border-slate-100 pb-4 text-lg font-semibold text-slate-800">
             Detalles de la Cuenta
           </h3>
-
-          {/* Grid responsivo: 1 columna en móvil, 2 en PC */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             
-            {/* Bloque: Email */}
             <div className="flex items-start gap-3">
               <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-slate-500">
                 <Mail size={20} />
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500">Correo Electrónico</p>
-                <p className="mt-0.5 font-semibold text-slate-800">{user?.email}</p>
+                <p className="mt-0.5 font-semibold text-slate-800">{displayData?.email}</p>
               </div>
             </div>
 
-            {/* Bloque: Rol (Con el Badge de colores que ya tenías) */}
             <div className="flex items-start gap-3">
               <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-slate-500">
                 <Shield size={20} />
@@ -85,23 +174,21 @@ export default function Perfildashboard() {
               <div>
                 <p className="text-sm font-medium text-slate-500">Nivel de Acceso</p>
                 <div className="mt-1 inline-flex items-center rounded-md border border-teal-100 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
-                  {user?.rol.name}
+                  {formatRole(displayData?.rol.toString())}
                 </div>
               </div>
             </div>
 
-            {/* Bloque: ID */}
             <div className="flex items-start gap-3">
               <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-slate-500">
                 <Key size={20} />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">ID de Usuario</p>
-                <p className="mt-0.5 font-mono font-semibold text-slate-800">{user?.id}</p>
+                <p className="text-sm font-medium text-slate-500">Username</p>
+                <p className="mt-0.5 font-mono font-semibold text-slate-800">{displayData?.username}</p>
               </div>
             </div>
 
-            {/* Bloque: Estado */}
             <div className="flex items-start gap-3">
               <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-slate-500">
                 <BadgeCheck size={20} />
@@ -120,7 +207,83 @@ export default function Perfildashboard() {
 
           </div>
         </Card>
-        
+
+        {/* Modal Mejorado */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50" onClick={handleCloseModal} />
+            <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
+              
+              <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50">
+                <h2 className="text-xl font-bold text-slate-900">Actualizar Datos</h2>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                
+                {/* 4. Nuevo campo Fullname */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre Completo</label>
+                  <input
+                    type="text"
+                    value={formData.fullname}
+                    onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
+                    required
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Usuario</label>
+                    <input
+                      type="text"
+                      // CORRECCIÓN: Usamos formData, NO el contexto user
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Nueva Contraseña <span className="text-xs font-normal text-slate-400">(Opcional)</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    // CORRECCIÓN: Le quitamos el "required" porque según el DTO es opcional
+                    placeholder="Dejar en blanco para no cambiar"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <Button variant="soft" type="button" onClick={handleCloseModal} className="flex-1">
+                    Cancelar
+                  </Button>
+                  <Button variant="solid" type="submit" loading={isSaving} className="flex-1">
+                    {loading ? "Guardando..." : "Guardar Cambios"}
+                  </Button>
+                </div>
+
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </AdminLayout>
   );
