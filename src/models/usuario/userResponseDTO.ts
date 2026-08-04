@@ -1,19 +1,16 @@
+export interface RoleDTO {
+  id: number;
+  name: string;
+}
 export interface UserResponseDTO {
   id: number;
   username: string;
   fullname: string;
+  password: string;
   email: string;
-  rol: string;
-  isActive: boolean;
+  rol: RoleDTO; 
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface UserUpdateRequestDTO {
-  username: string;
-  password?: string;
-  fullname: string;
-  email: string;
-  rol: string;
-  isActive: boolean;
-}
