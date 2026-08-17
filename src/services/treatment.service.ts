@@ -1,4 +1,4 @@
-import { api } from "../utils/axiosInterceptor"; 
+import { api } from "../utils/axiosInterceptor";
 import type { ServiceDTO } from "../models/service/serviceDTO";
 import type { GlobalResponse } from "../models/Global/globalResponse";
 import type { Page } from "../models/Global/page";
@@ -29,6 +29,17 @@ export const treatmentService = {
   save: async (service: ServiceDTO): Promise<GlobalResponse<ServiceDTO>> => {
     const response = await api.post<GlobalResponse<ServiceDTO>>(
       `${ENDPOINT}/save`,
+      service,
+    );
+    return response.data;
+  },
+
+  update: async (
+    id: number,
+    service: ServiceDTO,
+  ): Promise<GlobalResponse<ServiceDTO>> => {
+    const response = await api.put<GlobalResponse<ServiceDTO>>(
+      `${ENDPOINT}/${id}`,
       service,
     );
     return response.data;

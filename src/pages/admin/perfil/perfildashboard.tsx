@@ -2,11 +2,9 @@ import { AdminLayout } from "../../../components/adminLayout";
 import { Card } from "../../../components/ui/card/card";
 import { Button } from "../../../components/ui/button/button";
 import { useAuth } from "../../../context/authContext";
-import { Mail, Shield, Key, BadgeCheck, Edit } from "lucide-react";
+import { Mail, Shield, Key, BadgeCheck, Edit, EyeIcon, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
-import type {
-  UserResponseDTO,
-} from "../../../models/usuario/userResponseDTO";
+import type { UserResponseDTO } from "../../../models/usuario/userResponseDTO";
 import type { UserUpdateRequestDTO } from "../../../models/usuario/userUpdateRequestDTO";
 import { userService } from "../../../services/user.service";
 
@@ -14,17 +12,18 @@ export default function Perfildashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [profileData, setProfileData] = useState<UserResponseDTO | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     fullname: "",
     username: "",
     email: "",
     password: "",
-  })
+  });
 
   const fetchProfile = async () => {
     if (!user?.id) return;
@@ -50,13 +49,13 @@ const [formData, setFormData] = useState({
     fetchProfile();
   }, []);
 
-const handleOpenModal = () => {
+  const handleOpenModal = () => {
     if (profileData) {
       setFormData({
         fullname: profileData.fullname || "",
         username: profileData.username || "",
         email: profileData.email || "",
-        password: "", 
+        password: "",
       });
     }
     setIsModalOpen(true);
@@ -66,7 +65,7 @@ const handleOpenModal = () => {
     setIsModalOpen(false);
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileData) return;
 
@@ -77,16 +76,10 @@ const handleSubmit = async (e: React.FormEvent) => {
         username: formData.username,
         fullname: formData.fullname,
         email: formData.email,
-        rol: profileData.rol, 
-        isActive: profileData.active, 
+        rol: profileData.rol,
+        password: formData.password ? formData.password : profileData.password,
+        isActive: profileData.active,
       };
-
-      if (formData.password.trim() !== "") {
-        payload.password = formData.password;
-      }else{
-        payload.password = profileData.password;
-      }
-
       const response = await userService.update(profileData.id, payload);
 
       if (response.ok) {
@@ -103,7 +96,6 @@ const handleSubmit = async (e: React.FormEvent) => {
       setIsSaving(false);
     }
   };
-
 
   const fornatRole =
     user?.rol?.name === "ROLE_ADMIN"
@@ -211,7 +203,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
                   </span>
-                  <p className="font-semibold text-emerald-600">{profileData?.rol ? "Autenticado" : "No autenticado"}</p>
+                  <p className="font-semibold text-emerald-600">
+                    {profileData?.rol ? "Autenticado" : "No autenticado"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -281,21 +275,32 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Nueva Contraseña{" "}
-                    <span className="text-xs font-normal text-slate-400">
-                      (Opcional)
-                    </span>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Contraseña
                   </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                    placeholder="Dejar en blanco para no cambiar"
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      required
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 pr-12 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-teal-50/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-600 hover:text-teal-700 transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeIcon size={20} />
+                      ) : (
+                        <EyeOff size={20} />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, AlertCircle, DollarSign, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Search, AlertCircle, DollarSign, Loader2, Lock, Unlock } from 'lucide-react';
 import { AdminLayout } from "../../../components/adminLayout";
 import { treatmentService } from '../../../services/treatment.service';
 import type { ServiceDTO } from '../../../models/service/serviceDTO';
@@ -13,6 +13,7 @@ export default function DasboardServicios() {
   const [editingService, setEditingService] = useState<ServiceDTO | null>(null);
   
   const [formData, setFormData] = useState({
+    id:0 ,
     name: '',
     basePrice: '',
   });
@@ -48,12 +49,14 @@ export default function DasboardServicios() {
     if (service) {
       setEditingService(service);
       setFormData({
+        id: service.id,
         name: service.name,
         basePrice: service.basePrice.toString(),
       });
     } else {
       setEditingService(null);
       setFormData({
+        id: 0,
         name: '',
         basePrice: '',
       });
@@ -70,12 +73,16 @@ export default function DasboardServicios() {
     e.preventDefault();
     try {
       const serviceData: ServiceDTO = {
-        id: editingService ? editingService.id : 0,
+        id: formData.id,
         name: formData.name,
         basePrice: parseFloat(formData.basePrice),
+        isActive: true,
       };
-
-      await treatmentService.save(serviceData);
+      if (editingService) {
+        await treatmentService.update(serviceData.id, serviceData);
+      } else {
+        await treatmentService.save(serviceData);
+      }
       fetchServices();
       handleCloseModal();
     } catch (err) {
@@ -84,13 +91,22 @@ export default function DasboardServicios() {
     }
   };
 
-  const handleDeleteService = async (id: number) => {
-    if (confirm('¿Está seguro de que desea desactivar este servicio?')) {
+  const handleDeleteService = async (service: ServiceDTO) => {
+    const accion = service.isActive ? 'desactivar' : 'activar';
+    const nuevoEstado = !service.isActive; 
+
+    if (confirm(`¿Está seguro de que desea ${accion} este servicio?`)) {
+
       try {
-        await treatmentService.delete(id);
+        await treatmentService.update(service.id, { 
+          id: service.id,
+          name: service.name,
+          basePrice: service.basePrice,
+          isActive: nuevoEstado,
+        });
         fetchServices();
       } catch (err) {
-        alert('Error al eliminar el servicio');
+        alert(`Error al ${accion} el servicio`);
         console.error(err);
       }
     }
@@ -177,6 +193,7 @@ export default function DasboardServicios() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">ID</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Servicio</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Precio Base</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Estado</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Acciones</th>
                   </tr>
                 </thead>
@@ -187,6 +204,11 @@ export default function DasboardServicios() {
                       <td className="px-6 py-4 text-sm font-medium text-slate-900">{service.name}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-teal-600">${service.basePrice.toFixed(2)}</td>
                       <td className="px-6 py-4 text-sm">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {service.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleOpenModal(service)}
@@ -195,10 +217,10 @@ export default function DasboardServicios() {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteService(service.id)}
+                            onClick={() => handleDeleteService(service)}
                             className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
                           >
-                            <Trash2 className="w-4 h-4" />
+                          {service.isActive ? <Lock/> : <Unlock/>}
                           </button>
                         </div>
                       </td>
@@ -251,6 +273,7 @@ export default function DasboardServicios() {
                   required
                   step="0.01"
                   className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+                  max="100000.00"
                 />
               </div>
 
