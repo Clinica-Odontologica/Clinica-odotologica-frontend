@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, Search, AlertCircle, Loader2} from 'lucide-react';
 import { AdminLayout } from "../../../components/adminLayout";
 import { patientService } from '../../../services/patient.service';
 import type { PatientDTO } from '../../../models/patient/patientDTO';
+import type { PatientRequestDTO } from '../../../models/patient/patientRequestDTO';
 
 export default function DashboardPacientes() {
   const [patients, setPatients] = useState<PatientDTO[]>([]);
@@ -12,8 +13,7 @@ export default function DashboardPacientes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<PatientDTO | null>(null);
   
-  const [formData, setFormData] = useState<PatientDTO>({
-    id: 0,
+  const [formData, setFormData] = useState({
     dni: '',
     name: '',
     last_name: '',
@@ -52,17 +52,15 @@ export default function DashboardPacientes() {
   const handleOpenModal = (patient?: PatientDTO) => {
     if (patient) {
       setEditingPatient(patient);
-      setFormData(patient);
+      setFormData({
+        dni: patient.dni,
+        name: patient.name,
+        last_name: patient.last_name,
+        phone: patient.phone || '',
+        email: patient.email || '',
+      });
     } else {
       setEditingPatient(null);
-      setFormData({
-        id: 0,
-        dni: '',
-        name: '',
-        last_name: '',
-        phone: '',
-        email: '',
-      });
     }
     setIsModalOpen(true);
   };
@@ -70,16 +68,37 @@ export default function DashboardPacientes() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingPatient(null);
+    setFormData({
+      dni: '',
+      name: '',
+      last_name: '',
+      phone: '',
+      email: '',
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await patientService.save(formData);
+      if (editingPatient) {
+        await patientService.update(editingPatient.id, formData);
+        alert('Paciente actualizado correctamente');
+      } else {
+        const dataToSave: PatientRequestDTO = {
+          dni: formData.dni,
+          name: formData.name,
+          last_name: formData.last_name,
+          phone: formData.phone || undefined,
+          email: formData.email || undefined,
+        };
+        await patientService.save(dataToSave);
+        alert('Paciente registrado correctamente');
+      }
+      
       fetchPatients();
       handleCloseModal();
     } catch (err) {
-      alert('Error al guardar el paciente');
+      alert('Error al guardar o actualizar el paciente');
       console.error(err);
     }
   };
