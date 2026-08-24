@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, AlertCircle, Loader2} from 'lucide-react';
+import { Plus, Edit2, Search, AlertCircle, Loader2, Lock, Unlock} from 'lucide-react';
 import { AdminLayout } from "../../../components/adminLayout";
 import { patientService } from '../../../services/patient.service';
 import type { PatientDTO } from '../../../models/patient/patientDTO';
@@ -80,18 +80,20 @@ export default function DashboardPacientes() {
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload: PatientRequestDTO = {
+        dni: formData.dni,
+        name: formData.name,
+        last_name: formData.last_name,
+        phone: formData.phone || undefined,
+        email: formData.email || undefined,
+        isActive: editingPatient ? editingPatient.isActive : true, 
+      };
+
       if (editingPatient) {
-        await patientService.update(editingPatient.id, formData);
+        await patientService.update(editingPatient.id, payload);
         alert('Paciente actualizado correctamente');
       } else {
-        const dataToSave: PatientRequestDTO = {
-          dni: formData.dni,
-          name: formData.name,
-          last_name: formData.last_name,
-          phone: formData.phone || undefined,
-          email: formData.email || undefined,
-        };
-        await patientService.save(dataToSave);
+        await patientService.save(payload);
         alert('Paciente registrado correctamente');
       }
       
@@ -103,15 +105,23 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
   };
 
-  const handleDeletePatient = async (id: number) => {
-    if (confirm('¿Está seguro de que desea desactivar este paciente?')) {
-      try {
-        await patientService.delete(id);
-        fetchPatients();
-      } catch (err) {
-        alert('Error al eliminar el paciente');
-        console.error(err);
-      }
+  const handleToggleLock = async (patient: PatientDTO) => {
+    if (!confirm(`¿Estás seguro de ${patient.isActive ? "desactivar" : "activar"} a ${patient.name} ${patient.last_name}?`)) {
+      return;
+    }
+    try {
+      await patientService.update(patient.id, {
+        dni: patient.dni,
+        name: patient.name,
+        last_name: patient.last_name,
+        phone: patient.phone || undefined,
+        email: patient.email || undefined,
+        isActive: !patient.isActive,
+      });
+      fetchPatients();
+    } catch (err) {
+      alert("Error al cambiar el estado del paciente");
+      console.error(err);
     }
   };
 
@@ -164,6 +174,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Apellido</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Teléfono</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Email</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Estado</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Acciones</th>
                   </tr>
                 </thead>
@@ -177,18 +188,34 @@ const handleSubmit = async (e: React.FormEvent) => {
                       <td className="px-6 py-4 text-sm text-slate-600">{patient.email || '-'}</td>
                       <td className="px-6 py-4 text-sm">
                         <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${patient.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {patient.isActive ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleOpenModal(patient)}
                             className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDeletePatient(patient.id)}
-                            className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            <button
+                              onClick={() => handleToggleLock(patient)}
+                              className={`rounded-lg p-2 transition-colors ${
+                                patient.isActive        
+                                  ? "text-yellow-600 hover:bg-yellow-100"
+                                  : "text-green-600 hover:bg-green-100"
+                              }`}
+                              title={patient.isActive ? "Desactivar" : "Activar"}
+                            >
+                              {patient.isActive ? (
+                                <Lock className="h-4 w-4" />
+                              ) : (
+                                <Unlock className="h-4 w-4" />
+                              )}
+                            </button>
                         </div>
                       </td>
                     </tr>

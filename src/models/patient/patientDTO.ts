@@ -5,4 +5,5 @@ export interface PatientDTO {
   last_name: string;
   phone?: string;
   email?: string;
+  isActive: boolean;
 }
