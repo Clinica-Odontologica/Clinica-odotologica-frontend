@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import {
   Plus,
   Edit2,
-  Trash2,
   Search,
   AlertCircle,
   Loader2,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { AdminLayout } from "../../../components/adminLayout";
 import { doctorService } from "../../../services/doctor.service";
 import type { DoctorDTO } from "../../../models/doctor/doctorDTO";
+import type { DoctorRequestDTO } from "../../../models/doctor/doctorRequestDTO";
 
 export default function DasboardOdontologos() {
   const [doctors, setDoctors] = useState<DoctorDTO[]>([]);
@@ -82,7 +84,7 @@ export default function DasboardOdontologos() {
         name: doctor.name,
         lastName: getLastName(doctor),
         specialty: doctor.specialty,
-        username: "", // Username and password are usually not edited here for security
+        username: "", 
         password: "",
         email: "",
       });
@@ -113,37 +115,74 @@ export default function DasboardOdontologos() {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = {
+        name: formData.name,
+        lastName: formData.lastName,
+        specialty: formData.specialty,
+        username: formData.username || undefined,
+        password: formData.password || undefined,
+        email: formData.email || undefined,
+      };
+
       if (editingDoctor) {
-        // For update, we only send the doctor details
-        const response = await doctorService.update(editingDoctor.id, {
-          name: formData.name,
-          lastName: formData.lastName,
-          specialty: formData.specialty,
-        });
-        if (response.ok) fetchDoctors();
+        const response = await doctorService.update(editingDoctor.id, payload);
+        
+        if (response.ok) {
+          alert("Odontólogo actualizado correctamente");
+          fetchDoctors();
+          handleCloseModal();
+        } else {
+          alert("Error al actualizar: " + response.message); 
+        }
       } else {
-        const response = await doctorService.save(formData);
-        if (response.ok) fetchDoctors();
+        const response = await doctorService.save(payload);
+        
+        if (response.ok) {
+          alert("Odontólogo registrado correctamente");
+          fetchDoctors();
+          handleCloseModal();
+        } else {
+          alert("Error al registrar: " + response.message);
+        }
       }
-      handleCloseModal();
     } catch (err) {
-      alert("Error al guardar el doctor");
+      alert("Error de red al guardar el doctor");
       console.error(err);
     }
   };
 
-  const handleDeleteDoctor = async (id: number) => {
-    if (confirm("¿Está seguro de que desea desactivar este doctor?")) {
-      try {
-        const response = await doctorService.delete(id);
-        if (response.ok) fetchDoctors();
-      } catch (err) {
-        alert("Error al eliminar el doctor");
-        console.error(err);
+const handleToggleLock = async (doctor: DoctorDTO) => {
+    if (!confirm(`¿Estás seguro de ${doctor.isActive ? "desactivar" : "activar"} a ${doctor.name} ${getLastName(doctor)}?`)) {
+      return;
+    }
+    
+    const nuevoEstado = !doctor.isActive;
+    
+    try {
+      const payload = {
+        id: doctor.id, 
+        name: doctor.name,
+        lastName: getLastName(doctor),
+        specialty: doctor.specialty,
+        isActive: nuevoEstado,
+        active: nuevoEstado, 
+      };
+      
+      console.log("Enviando toggle de doctor:", payload);
+      
+      const response = await doctorService.update(doctor.id, payload as DoctorRequestDTO);
+      
+      if (response.ok) {
+        fetchDoctors();
+      } else {
+        alert("Error del servidor: " + response.message);
       }
+    } catch (err) {
+      alert("Error de red al cambiar el estado del doctor");
+      console.error(err);
     }
   };
 
@@ -258,11 +297,20 @@ export default function DasboardOdontologos() {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteDoctor(doctor.id)}
-                            className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                              onClick={() => handleToggleLock(doctor)}
+                              className={`rounded-lg p-2 transition-colors ${
+                                doctor.isActive        
+                                  ? "text-yellow-600 hover:bg-yellow-100"
+                                  : "text-green-600 hover:bg-green-100"
+                              }`}
+                              title={doctor.isActive ? "Desactivar" : "Activar"}
+                            >
+                              {doctor.isActive ? (
+                                <Lock className="h-4 w-4" />
+                              ) : (
+                                <Unlock className="h-4 w-4" />
+                              )}
+                            </button>
                         </div>
                       </td>
                     </tr>
@@ -342,7 +390,7 @@ export default function DasboardOdontologos() {
                   required
                   className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500"
                 >
-                  <option value="">Seleccionar especialidad</option>
+                  <option value="">{formData.specialty ? formData.specialty : "Seleccionar especialidad"}</option>
                   <option value="Odontología General">
                     Odontología General
                   </option>
