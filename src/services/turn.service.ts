@@ -4,7 +4,7 @@ import type { TurnResponseDTO } from "../models/turn/turnResponseDTO";
 import type { GlobalResponse } from "../models/Global/globalResponse";
 import type { Page } from "../models/Global/page";
 
-const ENDPOINT = "/tratamientos";
+const ENDPOINT = "/turnos";
 
 export const turnService = {
   getAllPaginated: async (
@@ -48,14 +48,14 @@ export const turnService = {
       `${ENDPOINT}/save`,
       turn,
       {
-        params: { userId },
+        params: { userId }, 
       },
     );
     return response.data;
   },
 
   delete: async (id: number): Promise<GlobalResponse<void>> => {
-    const response = await api.delete<GlobalResponse<void>>(`${ENDPOINT}/${id}`, {
+    const response = await api.delete<GlobalResponse<void>>(`${ENDPOINT}`, {
       params: { id },
     });
     return response.data;

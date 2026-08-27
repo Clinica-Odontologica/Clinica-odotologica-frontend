@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   Gauge,
+  Calendar,
   BriefcaseMedical,
   LayoutDashboardIcon,
 } from "lucide-react";
@@ -19,6 +20,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   currentPage:
     | "odontologos"
+    | "turnos"
     | "servicios"
     | "usuarios"
     | "pacientes"
@@ -40,6 +42,12 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
       label: "Dashboard",
       icon: Gauge,
       href: routes.admin,
+    },
+    {
+      id:"turnos",
+      label: "Gestión de Turnos",
+      icon: Calendar,
+      href: routes.dashboard_turnos,
     },
     {
       id: "odontologos",

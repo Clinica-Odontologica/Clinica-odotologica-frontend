@@ -9,14 +9,13 @@ import {
   AlertCircle
 } from "lucide-react";
 
-// 1. Datos simulados de la agenda del día (Luego vendrán de tu backend)
 const turnosHoy = [
   {
     id: 1,
     paciente: "María Luisa Gómez",
     hora: "09:00 AM",
     tratamiento: "Control de Ortodoncia",
-    estado: "atendido", // Ya pasó
+    estado: "atendido", 
     dni: "76543210"
   },
   {
@@ -24,7 +23,7 @@ const turnosHoy = [
     paciente: "Juan Carlos Pérez",
     hora: "10:30 AM",
     tratamiento: "Limpieza con Ultrasonido",
-    estado: "en_espera", // Está sentado en recepción AHORA
+    estado: "en_espera", 
     dni: "45678912"
   },
   {
@@ -32,13 +31,12 @@ const turnosHoy = [
     paciente: "Roberto Sánchez",
     hora: "11:45 AM",
     tratamiento: "Evaluación para Implante",
-    estado: "programado", // Aún no llega
+    estado: "programado", 
     dni: "12345678"
   },
 ];
 
 export default function DoctorDashboard() {
-  // Función helper para renderizar un "Badge" (etiqueta) visual según el estado del paciente
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
       case "atendido":

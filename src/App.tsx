@@ -12,6 +12,7 @@ import DasboardServicios from "./pages/admin/servicios/dashboardServicios";
 import DashboardPacientes from "./pages/admin/pacientes/dashboardPacientes";
 import { ProtectedRoute } from "./components/protectedRoute";
 import Perfildashboard from "./pages/admin/perfil/perfildashboard";
+import   DashboardTurnos  from "./pages/admin/turnos/dashboardTurnos";
 
 function Unauthorized() {
   const navigate = useNavigate();
@@ -87,6 +88,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
               <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={routes.dashboard_turnos}
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <DashboardTurnos />
             </ProtectedRoute>
           }
         />

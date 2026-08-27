@@ -19,6 +19,12 @@ export const routes = {
   //Admin Pages
     dashboard_profile: "/dashboard/profile",
 
+  // Turnos Management
+  dashboard_turnos: "/dashboard/turnos",
+  dashboard_turno: "/dashboard/turno/:id",
+  dashboard_turno_new: "/dashboard/turno/nuevo",
+  dashboard_turno_edit: "/dashboard/turno/edit/:id",
+
   // Users Management
   dashboard_users: "/dashboard/usuarios",
   dashboard_user: "/dashboard/usuario/:id",
