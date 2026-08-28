@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -7,26 +8,20 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Loader2 } from "lucide-react";
+import { turnService } from "../../../services/turn.service";
+import type { TurnResponseDTO } from "../../../models/turn/turnResponseDTO";
 
-// 1. Datos simulados (Luego los reemplazarás con los datos reales de tu backend)
-const data = [
-  { month: "Ene", ingresos: 18500 },
-  { month: "Feb", ingresos: 19200 },
-  { month: "Mar", ingresos: 21000 },
-  { month: "Abr", ingresos: 20500 },
-  { month: "May", ingresos: 23400 },
-  { month: "Jun", ingresos: 22800 },
-  { month: "Jul", ingresos: 25600 },
-  { month: "Ago", ingresos: 24500 },
-  { month: "Sep", ingresos: 26800 },
-  { month: "Oct", ingresos: 28000 },
-  { month: "Nov", ingresos: 29500 },
-  { month: "Dic", ingresos: 32000 },
-];
+// 🌟 Interfaz personalizada para el Tooltip para evitar el error de "any"
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+  }>;
+  label?: string;
+}
 
-// 2. Custom Tooltip para darle un diseño limpio al pasar el mouse
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
@@ -41,12 +36,76 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function IngresosCharts() {
+  const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<{ month: string; ingresos: number }[]>([]);
+
+  useEffect(() => {
+    const fetchIngresos = async () => {
+      try {
+        setLoading(true);
+        // Traemos los turnos. Ajusta el límite si es necesario.
+        const response = await turnService.getAllPaginated(0, 500);
+
+        if (response.ok) {
+          const turnos = response.data.content;
+
+          // 1. Preparamos nuestro molde de meses en 0
+          const mesesEstructura = [
+            { month: "Ene", ingresos: 0 },
+            { month: "Feb", ingresos: 0 },
+            { month: "Mar", ingresos: 0 },
+            { month: "Abr", ingresos: 0 },
+            { month: "May", ingresos: 0 },
+            { month: "Jun", ingresos: 0 },
+            { month: "Jul", ingresos: 0 },
+            { month: "Ago", ingresos: 0 },
+            { month: "Sep", ingresos: 0 },
+            { month: "Oct", ingresos: 0 },
+            { month: "Nov", ingresos: 0 },
+            { month: "Dic", ingresos: 0 },
+          ];
+
+          // 2. Iteramos cada turno y sumamos su costo al mes correspondiente
+          turnos.forEach((turno: TurnResponseDTO) => {
+            // Ignoramos los turnos cancelados para calcular el ingreso real
+            if (turno.status !== "CANCELADO" && turno.appointmentDate) {
+              // appointmentDate viene como "2026-08-31T16:46:00", así que extraemos el mes (índice 1 tras hacer split por "-")
+              const monthString = turno.appointmentDate.split("-")[1]; 
+              const monthIndex = parseInt(monthString, 10) - 1; // Le restamos 1 porque Enero es 0 en arreglos
+
+              // Verificamos que el índice sea válido (0-11) y sumamos el totalCost
+              if (monthIndex >= 0 && monthIndex <= 11) {
+                mesesEstructura[monthIndex].ingresos += turno.totalCost || 0;
+              }
+            }
+          });
+
+          // 3. Actualizamos el estado con la data procesada
+          setChartData(mesesEstructura);
+        }
+      } catch (error) {
+        console.error("Error al cargar los datos de ingresos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIngresos();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[300px] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+      </div>
+    );
+  }
+
   return (
-    // Es vital que el contenedor tenga un alto definido (h-[300px]) para que ResponsiveContainer funcione
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
-          data={data}
+          data={chartData}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
         >
           {/* Definimos el gradiente de color para el relleno del gráfico */}
@@ -77,7 +136,10 @@ export default function IngresosCharts() {
             tick={{ fill: "#64748b", fontSize: 12 }}
           />
 
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '5 5' }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ stroke: "#cbd5e1", strokeWidth: 1, strokeDasharray: "5 5" }}
+          />
 
           {/* La línea y el área con el gradiente */}
           <Area

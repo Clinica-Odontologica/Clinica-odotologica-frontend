@@ -11,6 +11,7 @@ import {
   Calendar,
   BriefcaseMedical,
   LayoutDashboardIcon,
+  ClipboardPlus,
 } from "lucide-react";
 import { useState } from "react";
 import { routes } from "../utils/routes";
@@ -23,6 +24,7 @@ interface AdminLayoutProps {
     | "turnos"
     | "servicios"
     | "usuarios"
+    | "historia-clinica"
     | "pacientes"
     | "dashboard"
     | "perfil";
@@ -60,6 +62,12 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
       label: "Gestión de Pacientes",
       icon: Users,
       href: routes.dashboard_pacientes,
+    },
+    {
+      id: "historia-clinica",
+      label: "Historia Clínica",
+      icon: ClipboardPlus,
+      href: routes.dashboard_historia_clinica,
     },
     {
       id: "servicios",

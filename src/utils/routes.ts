@@ -19,6 +19,14 @@ export const routes = {
   //Admin Pages
     dashboard_profile: "/dashboard/profile",
 
+
+  
+  // Historia Clinica
+  dashboard_historia_clinica: "/dashboard/historia-clinica",
+  dashboard_historia_clinica_paciente: "/dashboard/historia-clinica/paciente/:id",
+  dashboard_historia_clinica_paciente_nueva: "/dashboard/historia-clinica/paciente/nuevo",
+  dashboard_historia_clinica_paciente_edit: "/dashboard/historia-clinica/paciente/edit/:id",
+
   // Turnos Management
   dashboard_turnos: "/dashboard/turnos",
   dashboard_turno: "/dashboard/turno/:id",
