@@ -13,6 +13,7 @@ import DashboardPacientes from "./pages/admin/pacientes/dashboardPacientes";
 import { ProtectedRoute } from "./components/protectedRoute";
 import Perfildashboard from "./pages/admin/perfil/perfildashboard";
 import   DashboardTurnos  from "./pages/admin/turnos/dashboardTurnos";
+import DashboardHistoria from "./pages/admin/historiaClinica/dashboardHistoria";
 
 function Unauthorized() {
   const navigate = useNavigate();
@@ -132,6 +133,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["ADMIN", "RECEPTIONIST"]}>
               <DashboardPacientes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={routes.dashboard_historia_clinica}
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN", "DOCTOR", "RECEPTIONIST"]}>
+              <DashboardHistoria/>
             </ProtectedRoute>
           }
         />
