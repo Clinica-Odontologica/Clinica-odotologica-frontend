@@ -33,6 +33,13 @@ export const doctorService = {
     );
     return response.data;
   },
+  
+  getByUserId: async (userId: number): Promise<GlobalResponse<DoctorDTO>> => {
+    const response = await api.get<GlobalResponse<DoctorDTO>>(
+      `${ENDPOINT}/user/${userId}`,
+    );
+    return response.data;
+  },
 
   save: async (
     doctor: DoctorRequestDTO,

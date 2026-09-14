@@ -10,6 +10,7 @@ import {
   FileText
 } from "lucide-react";
 import DoctorLayout from "../../components/doctorLayout";
+import { doctorService } from "../../services/doctor.service";
 import { turnService } from "../../services/turn.service";
 import { clinicalService } from "../../services/clinical.service";
 import type { TurnResponseDTO } from "../../models/turn/turnResponseDTO";
@@ -34,7 +35,19 @@ export default function DoctorPage() {
     if (!user || !user.id) return;
     try {
       setLoading(true);
-      const response = await turnService.getByDoctorAndDate(user.id, selectedDate);
+      setError(null);
+
+      const doctorRes = await doctorService.getByUserId(user.id);
+      
+      if (!doctorRes.ok || !doctorRes.data) {
+        setError("Este usuario no tiene un perfil de doctor asociado.");
+        setLoading(false);
+        return;
+      }
+
+      const realDoctorId = doctorRes.data.id;
+
+      const response = await turnService.getByDoctorAndDate(realDoctorId, selectedDate);
       if (response.ok) {
         setTurns(response.data);
       } else {
@@ -81,7 +94,7 @@ export default function DoctorPage() {
       };
       
       const res = await clinicalService.save(payload);
-      if (res.ok) {
+      if (res.ok || res.message === "Success" || !res.message) {
         toast.success("Turno completado y guardado en la historia clínica.");
         fetchAgenda(); // Refrescar turnos
         handleCloseModal();
@@ -90,7 +103,12 @@ export default function DoctorPage() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Ocurrió un error al guardar el registro clínico.");
+      // Le explicamos a TypeScript la forma exacta que tiene el error de Axios
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      
+      // Ahora sí nos dejará leer el mensaje sin marcar error en rojo
+      const errorMsg = axiosError?.response?.data?.message || "Ocurrió un error al guardar el registro clínico.";
+      toast.error(errorMsg);
     }
   };
 
@@ -149,51 +167,55 @@ export default function DoctorPage() {
               <p className="text-slate-500 font-medium">No hay turnos programados para esta fecha</p>
             </div>
           ) : (
-            turns.map((turn) => (
-              <div 
-                key={turn.id}
-                className="group bg-white p-5 rounded-2xl border border-teal-100 hover:border-teal-300 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-teal-50 rounded-xl flex flex-col items-center justify-center border border-teal-100 group-hover:bg-teal-600 group-hover:border-teal-600 transition-colors">
-                    <Clock className="w-4 h-4 text-teal-600 group-hover:text-white mb-1" />
-                    <span className="text-xs font-bold text-teal-800 group-hover:text-white">{turn.time}</span>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-lg font-bold text-slate-900">{turn.patient.name} {turn.patient.last_name}</h4>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {turn.treatments.map(t => (
-                        <span key={t.id} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-cyan-50 text-cyan-700 rounded-md border border-cyan-100">
-                          {t.name}
-                        </span>
-                      ))}
+            turns.map((turn) => {
+              const timeDisplay = turn.appointmentDate ? turn.appointmentDate.split('T')[1].substring(0, 5) : 'Sin hora';
+
+              return (
+                <div 
+                  key={turn.id}
+                  className="group bg-white p-5 rounded-2xl border border-teal-100 hover:border-teal-300 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-teal-50 rounded-xl flex flex-col items-center justify-center border border-teal-100 group-hover:bg-teal-600 group-hover:border-teal-600 transition-colors">
+                      <Clock className="w-4 h-4 text-teal-600 group-hover:text-white mb-1" />
+                      <span className="text-xs font-bold text-teal-800 group-hover:text-white">{timeDisplay}</span>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-lg font-bold text-slate-900">{turn.patientName} <span className="text-sm font-normal text-slate-500">({turn.patientDni})</span></h4>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {turn.services.map(t => (
+                          <span key={t.id} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-cyan-50 text-cyan-700 rounded-md border border-cyan-100">
+                            {t.name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3 self-end md:self-center">
-                  <div className="text-right mr-4 hidden md:block">
-                    <p className="text-xs text-slate-500 font-medium">Estado</p>
-                    <p className={`text-sm font-bold ${
-                      turn.status === 'COMPLETADO' ? 'text-green-600' : 'text-amber-600'
-                    }`}>
-                      {turn.status}
-                    </p>
+                  <div className="flex items-center gap-3 self-end md:self-center">
+                    <div className="text-right mr-4 hidden md:block">
+                      <p className="text-xs text-slate-500 font-medium">Estado</p>
+                      <p className={`text-sm font-bold ${
+                        turn.status === 'COMPLETADO' ? 'text-green-600' : 'text-amber-600'
+                      }`}>
+                        {turn.status}
+                      </p>
+                    </div>
+                    
+                    {turn.status !== 'COMPLETADO' && turn.status !== 'CANCELADO' && (
+                      <button 
+                        onClick={() => handleOpenModal(turn)}
+                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        Atender
+                      </button>
+                    )}
                   </div>
-                  
-                  {turn.status !== 'COMPLETADO' && turn.status !== 'CANCELADO' && (
-                    <button 
-                      onClick={() => handleOpenModal(turn)}
-                      className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Atender
-                    </button>
-                  )}
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -203,10 +225,10 @@ export default function DoctorPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={handleCloseModal} />
           <div className="relative bg-white rounded-xl shadow-xl max-w-2xl w-full">
-            <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 flex items-center gap-3">
+            <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 flex items-center gap-3 rounded-t-xl">
               <FileText className="w-6 h-6 text-teal-600" />
               <h2 className="text-xl font-bold text-slate-900">
-                Atención Médica - {selectedTurn.patient.name} {selectedTurn.patient.last_name}
+                Atención Médica - {selectedTurn.patientName}
               </h2>
             </div>
 

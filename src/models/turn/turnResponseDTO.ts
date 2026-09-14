@@ -10,6 +10,6 @@ export interface TurnResponseDTO {
   doctorSpecialty: string;
   status: string;
   appointmentDate: string;
-  services: ServiceDTO[]; // Java manda "services", no "treatments"
+  services: ServiceDTO[];
   totalCost: number;
 }
