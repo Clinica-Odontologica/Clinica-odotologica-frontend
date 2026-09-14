@@ -8,6 +8,15 @@ import type { UserResponseDTO } from "../../../models/usuario/userResponseDTO";
 import type { UserUpdateRequestDTO } from "../../../models/usuario/userUpdateRequestDTO";
 import { userService } from "../../../services/user.service";
 
+type FlexData = {
+  fullName?: string;
+  fullname?: string;
+  role?: { name: string };
+  rol?: { name: string };
+  isActive?: boolean;
+  active?: boolean;
+};
+
 export default function Perfildashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -31,15 +40,14 @@ export default function Perfildashboard() {
       setLoading(true);
       const response = await userService.getById(user.id);
 
-      if (response.ok) {
+      if (response.ok && response.data) {
         setProfileData(response.data);
       } else {
         setError(response.message);
-        console.error("Error fetching profile:", error);
       }
-    } catch (err) {
+    } catch (error) {
       setError("Error al cargar el perfil");
-      console.error("Profile fetch error:", err);
+      console.error("Profile fetch error:", error);
     } finally {
       setLoading(false);
     }
@@ -49,13 +57,19 @@ export default function Perfildashboard() {
     fetchProfile();
   }, []);
 
-  const handleOpenModal = () => {
-    if (profileData) {
+const handleOpenModal = () => {
+    // 🌟 TRUCO MÁGICO: Si profileData falló o no ha cargado, usamos el "user" del login
+    const sourceData = profileData || user; 
+    
+    if (sourceData) {
+      const sData = sourceData as unknown as FlexData & { username?: string; email?: string };
+      const actualFullName = sData.fullName || sData.fullname || "";
+      
       setFormData({
-        fullname: profileData.fullname || "",
-        username: profileData.username || "",
-        email: profileData.email || "",
-        password: "",
+        fullname: actualFullName,
+        username: sData.username || "",
+        email: sData.email || "",
+        password: "", // Siempre lo dejamos vacío por seguridad
       });
     }
     setIsModalOpen(true);
@@ -63,24 +77,36 @@ export default function Perfildashboard() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setFormData(prev => ({ ...prev, password: "" }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileData) return;
 
     try {
       setIsSaving(true);
+      
+      const pData = profileData as UserResponseDTO & FlexData;
 
-      const payload: UserUpdateRequestDTO = {
+      const payloadObj = {
         username: formData.username,
         fullname: formData.fullname,
         email: formData.email,
-        rol: profileData.rol,
-        password: formData.password ? formData.password : profileData.password,
-        isActive: profileData.active,
+        
+        // 🌟 CORRECCIÓN 1: Mandamos el objeto 'rol' o 'role', NO el 'id'
+        rol: pData.rol || pData.role, 
+        
+        // 🌟 CORRECCIÓN 2: Si UserResponseDTO no devuelve contraseña, evitamos que sea undefined
+        password: formData.password ? formData.password : ((pData as UserResponseDTO).password || ""), 
+        
+        // 🌟 CORRECCIÓN 3: Swagger pide 'isActive' exactamente
+        isActive: pData.isActive ?? pData.active ?? true, 
       };
-      const response = await userService.update(profileData.id, payload);
+
+      const finalPayload = payloadObj as unknown as UserUpdateRequestDTO;
+
+      const response = await userService.update(profileData.id, finalPayload);
 
       if (response.ok) {
         await fetchProfile();
@@ -97,18 +123,24 @@ export default function Perfildashboard() {
     }
   };
 
-  const fornatRole =
-    user?.rol?.name === "ROLE_ADMIN"
-      ? "Administrador"
-      : user?.rol?.name === "ROLE_DOCTOR"
-        ? "Odontólogo"
-        : user?.rol?.name === "ROLE_RECEPTIONIST"
-          ? "Recepción"
-          : "Usuario";
+  // Convertimos las variables de usuario al tipo seguro
+  const uData = user as unknown as FlexData;
+  const userRoleStr = uData?.role?.name || uData?.rol?.name || "";
+  
+  const formatRole =
+    userRoleStr === "ROLE_ADMIN" ? "Administrador"
+      : userRoleStr === "ROLE_DOCTOR" ? "Odontólogo"
+      : userRoleStr === "ROLE_RECEPTIONIST" ? "Recepción"
+      : "Usuario";
 
   const displayData = profileData || user;
-  const userName = profileData?.fullname || user?.username || "Usuario";
+  
+  const pData = profileData as UserResponseDTO & FlexData;
+  const userName = pData?.fullName || pData?.fullname || user?.username || "Usuario";
   const userInitial = userName.charAt(0).toUpperCase();
+
+  const dData = displayData as unknown as FlexData;
+  const displayRoleStr = dData?.role?.name || dData?.rol?.name || "";
 
   return (
     <AdminLayout currentPage={"perfil"}>
@@ -138,13 +170,14 @@ export default function Perfildashboard() {
               <h2 className="text-2xl font-bold text-slate-800">{userName}</h2>
               <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-slate-500">
                 <Shield size={16} className="text-teal-600" />
-                {fornatRole}
+                {formatRole}
               </p>
             </div>
           </div>
         </Card>
 
         {/* Tarjeta 2: Detalles de la Cuenta */}
+        {loading && <p className="text-center text-slate-500">Cargando perfil...</p>}
         <Card className="border border-border p-6 shadow-sm">
           <h3 className="mb-6 border-b border-slate-100 pb-4 text-lg font-semibold text-slate-800">
             Detalles de la Cuenta
@@ -159,7 +192,7 @@ export default function Perfildashboard() {
                   Correo Electrónico
                 </p>
                 <p className="mt-0.5 font-semibold text-slate-800">
-                  {displayData?.email}
+                  {displayData?.email || "Sin correo"}
                 </p>
               </div>
             </div>
@@ -173,7 +206,7 @@ export default function Perfildashboard() {
                   Nivel de Acceso
                 </p>
                 <div className="mt-1 inline-flex items-center rounded-md border border-teal-100 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
-                  {displayData?.rol?.name.replace("ROLE_", "")}
+                  {displayRoleStr.replace("ROLE_", "") || "USUARIO"}
                 </div>
               </div>
             </div>
@@ -203,8 +236,9 @@ export default function Perfildashboard() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
                   </span>
+                  {error && <p className="text-sm text-red-600">{error}</p>}
                   <p className="font-semibold text-emerald-600">
-                    {profileData?.rol ? "Autenticado" : "No autenticado"}
+                    Autenticado
                   </p>
                 </div>
               </div>
@@ -216,7 +250,7 @@ export default function Perfildashboard() {
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-              className="absolute inset-0 bg-black/50"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={handleCloseModal}
             />
             <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
@@ -227,7 +261,6 @@ export default function Perfildashboard() {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                {/* 4. Nuevo campo Fullname */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">
                     Nombre Completo
@@ -275,8 +308,9 @@ export default function Perfildashboard() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Contraseña
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex justify-between">
+                    <span>Contraseña</span>
+                    <span className="text-xs font-normal text-slate-400">Opcional (Dejar en blanco para mantener)</span>
                   </label>
                   <div className="relative">
                     <input
@@ -285,7 +319,6 @@ export default function Perfildashboard() {
                       onChange={(e) =>
                         setFormData({ ...formData, password: e.target.value })
                       }
-                      required
                       placeholder="••••••••"
                       className="w-full px-4 py-3 pr-12 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-teal-50/50"
                     />
@@ -318,7 +351,7 @@ export default function Perfildashboard() {
                     loading={isSaving}
                     className="flex-1"
                   >
-                    {loading ? "Guardando..." : "Guardar Cambios"}
+                    {isSaving ? "Guardando..." : "Guardar Cambios"}
                   </Button>
                 </div>
               </form>

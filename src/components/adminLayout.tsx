@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Settings,
   Users,
@@ -12,6 +12,7 @@ import {
   BriefcaseMedical,
   LayoutDashboardIcon,
   ClipboardPlus,
+  ArrowLeft, // 🌟 Nuevo ícono importado
 } from "lucide-react";
 import { useState } from "react";
 import { routes } from "../utils/routes";
@@ -32,13 +33,22 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { logout } = useAuth();
+  
+  // 🌟 Agregamos el hook para poder navegar hacia atrás
+  const navigate = useNavigate();
+  
+  // 1. Extraemos el "user" para saber su rol
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
     logout();
   };
 
-  const navItems = [
+  // 2. Evaluamos si es administrador
+  const isAdmin = user?.rol?.name === "ROLE_ADMIN" || user?.rol?.name === "ADMIN";
+
+  // 3. Definimos TODAS las rutas posibles
+  const allNavItems = [
     {
       id: "dashboard",
       label: "Dashboard",
@@ -46,7 +56,7 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
       href: routes.admin,
     },
     {
-      id:"turnos",
+      id: "turnos",
       label: "Gestión de Turnos",
       icon: Calendar,
       href: routes.dashboard_turnos,
@@ -89,6 +99,11 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
     },
   ];
 
+  // 4. MAGIA: Si es Admin, ve todo. Si no, filtramos para que solo vea "perfil"
+  const navItems = isAdmin 
+    ? allNavItems 
+    : allNavItems.filter((item) => item.id === "perfil");
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
       {/* Header */}
@@ -109,19 +124,33 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center">
                 <LayoutDashboardIcon className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900">
+              <h1 className="text-xl font-bold text-slate-900 hidden sm:block">
                 Clinica Odontológica
               </h1>
             </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-slate-700 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Salir</span>
-          </button>
+          {/* 🌟 Nueva sección de botones (Volver y Salir) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-colors"
+              title="Volver a la página anterior"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium hidden sm:inline">Volver</span>
+            </button>
+            
+            <div className="w-px h-6 bg-slate-200 hidden sm:block mx-1"></div>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-sm font-medium hidden sm:inline">Salir</span>
+            </button>
+          </div>
         </div>
       </header>
 
