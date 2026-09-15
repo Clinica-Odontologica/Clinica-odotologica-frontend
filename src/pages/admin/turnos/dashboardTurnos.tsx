@@ -12,7 +12,11 @@ import {
   Activity,
   XCircle,
 } from "lucide-react";
+
+// 🌟 1. Importamos ambos Layouts
 import { AdminLayout } from "../../../components/adminLayout";
+import { ReceptionLayout } from "../../../components/receptionLayout";
+
 import { turnService } from "../../../services/turn.service";
 import type { TurnResponseDTO } from "../../../models/turn/turnResponseDTO";
 import type { TurnRequestDTO } from "../../../models/turn/turnRequestDTO";
@@ -25,15 +29,24 @@ import type { DoctorDTO } from "../../../models/doctor/doctorDTO";
 import type { PatientDTO } from "../../../models/patient/patientDTO";
 import type { ServiceDTO } from "../../../models/service/serviceDTO";
 
-
+// 🌟 Tipo auxiliar seguro para ESLint
+type UserWithRole = {
+  role?: { name: string };
+  rol?: { name: string };
+};
 
 export default function DashboardTurnos() {
+  // 🌟 2. Extraemos el usuario y calculamos si es Admin de forma segura
+  const { user } = useAuth();
+  const uData = user as unknown as UserWithRole;
+  const roleName = uData?.role?.name || uData?.rol?.name || "";
+  const isAdmin = roleName === "ROLE_ADMIN" || roleName === "ADMIN";
+
   const [turnos, setTurnos] = useState<TurnoDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user } = useAuth();
 
   const [doctorsList, setDoctorsList] = useState<DoctorDTO[]>([]);
   const [patientsList, setPatientsList] = useState<PatientDTO[]>([]);
@@ -47,7 +60,7 @@ export default function DashboardTurnos() {
     time: "",
   });
 
-const fetchTurnos = async () => {
+  const fetchTurnos = async () => {
     try {
       setLoading(true);
       const response = await turnService.getAllPaginated(0, 100);
@@ -194,19 +207,18 @@ const fetchTurnos = async () => {
   };
 
   const fechaActual = new Date();
-  
   const dia = String(fechaActual.getDate()).padStart(2, '0');
   const mes = String(fechaActual.getMonth() + 1).padStart(2, '0'); 
   const anio = fechaActual.getFullYear();
-  
   const hoyFormateado = `${dia}/${mes}/${anio}`;
 
   const turnosHoy = turnos.filter((t) => t.date === hoyFormateado).length;
   const turnosPendientes = turnos.filter((t) => t.status === "PROGRAMADO" || t.status === "PENDIENTE").length;
   const turnosCancelados = turnos.filter((t) => t.status === "CANCELADO").length;
 
-  return (
-    <AdminLayout currentPage="turnos">
+  // 🌟 3. Guardamos todo el contenido visual en una constante
+  const pageContent = (
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -297,7 +309,7 @@ const fetchTurnos = async () => {
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Buscar por paciente, doctor o fecha (YYYY-MM-DD)..."
+            placeholder="Buscar por paciente, doctor o fecha (DD/MM/YYYY)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-xl border border-teal-200 bg-white py-3 pl-12 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200"
@@ -399,10 +411,10 @@ const fetchTurnos = async () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={handleCloseModal}
           />
-          <div className="relative w-full max-w-md rounded-xl bg-white shadow-xl">
+          <div className="relative w-full max-w-md rounded-xl bg-white shadow-xl overflow-hidden">
             <div className="border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 px-6 py-4">
               <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
                 <CalendarPlus className="h-5 w-5 text-teal-600" /> Reservar
@@ -429,7 +441,7 @@ const fetchTurnos = async () => {
                   </option>
                   {patientsList.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} {p.last_name} ({p.dni})
+                      {p.name} {p.last_name || p.last_name} ({p.dni})
                     </option>
                   ))}
                 </select>
@@ -514,13 +526,13 @@ const fetchTurnos = async () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={handleCloseModal}
                   className="flex-1 rounded-lg border border-teal-200 px-4 py-2 font-medium text-slate-700 transition-colors hover:bg-teal-50"
                 >
-                  Cerrar
+                  Cancelar
                 </button>
                 <button
                   type="submit"
@@ -533,6 +545,17 @@ const fetchTurnos = async () => {
           </div>
         </div>
       )}
+    </>
+  );
+
+  // 🌟 4. Devolvemos el Layout dinámicamente según el Rol
+  return isAdmin ? (
+    <AdminLayout currentPage="turnos">
+      {pageContent}
     </AdminLayout>
+  ) : (
+    <ReceptionLayout currentPage="turnos">
+      {pageContent}
+    </ReceptionLayout>
   );
 }

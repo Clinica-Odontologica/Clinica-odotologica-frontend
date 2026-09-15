@@ -57,10 +57,10 @@ function App() {
           }
         />
         <Route
-          path={routes.recepcion_nuevos_turnos}
+          path={routes.recepcion_turnos}
           element={
             <ProtectedRoute allowedRoles={["RECEPTIONIST", "ADMIN"]}>
-              <NuevoTurnoPage />
+              <DashboardTurnos />
             </ProtectedRoute>
           }
         />

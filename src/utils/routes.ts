@@ -2,8 +2,8 @@ export const routes = {
 
   // Recepcionist Routes
   recepcion: "/reception",
-  recepcion_nuevos_turnos: "/reception/turnos/nuevo",
   recepcion_pacientes: "/reception/pacientes",
+  recepcion_turnos: "/reception/turnos",
 
 
 

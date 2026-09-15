@@ -1,11 +1,32 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Search, AlertCircle, Loader2, Lock, Unlock} from 'lucide-react';
+
+// 🌟 1. Importamos ambos Layouts y el contexto de autenticación
 import { AdminLayout } from "../../../components/adminLayout";
+import { ReceptionLayout } from "../../../components/receptionLayout";
+import { useAuth } from "../../../context/authContext";
+
 import { patientService } from '../../../services/patient.service';
 import type { PatientDTO } from '../../../models/patient/patientDTO';
 import type { PatientRequestDTO } from '../../../models/patient/patientRequestDTO';
 
+
+// 🌟 Agregamos un tipo auxiliar rápido para evitar el 'any'
+type UserWithRole = {
+  role?: { name: string };
+  rol?: { name: string };
+};
+
 export default function DashboardPacientes() {
+  
+  // 🌟 2. Extraemos el usuario para conocer su rol
+  const { user } = useAuth();
+
+// Transformamos al usuario de forma segura
+  const uData = user as unknown as UserWithRole;
+  const roleName = uData?.role?.name || uData?.rol?.name || "";
+  const isAdmin = roleName === "ROLE_ADMIN" || roleName === "ADMIN";
+
   const [patients, setPatients] = useState<PatientDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +98,7 @@ export default function DashboardPacientes() {
     });
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const payload: PatientRequestDTO = {
@@ -125,8 +146,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
   };
 
-  return (
-    <AdminLayout currentPage="pacientes">
+  // 🌟 3. Guardamos todo el contenido visual en una constante
+  const pageContent = (
+    <>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -317,6 +339,16 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
         </div>
       )}
+    </>
+  );
+
+  return isAdmin ? (
+    <AdminLayout currentPage="pacientes">
+      {pageContent}
     </AdminLayout>
+  ) : (
+    <ReceptionLayout currentPage="pacientes">
+      {pageContent}
+    </ReceptionLayout>
   );
 }
