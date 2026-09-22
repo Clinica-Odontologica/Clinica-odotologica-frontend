@@ -37,8 +37,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+  };
+
   useEffect(() => {
-    // 1. Carga inicial de sesión y auto-reparación de tokens sueltos
     const storedUser = localStorage.getItem("authUser");
     if (storedUser) {
       try {
@@ -54,16 +60,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
     setIsLoading(false);
 
-    // 2. Escuchamos el evento de expiración que dispara el interceptor de Axios
-    const handleLogoutEvent = () => {
-      setUser(null);
-    };
-
-    window.addEventListener("auth/logout", handleLogoutEvent);
+    window.addEventListener("auth/logout", logout);
 
     // 3. Limpieza del listener al desmontar el componente
     return () => {
-      window.removeEventListener("auth/logout", handleLogoutEvent);
+      window.removeEventListener("auth/logout", logout);
     };
   }, []);
 
@@ -104,13 +105,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("authUser");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
   };
 
   const value: AuthContextType = {

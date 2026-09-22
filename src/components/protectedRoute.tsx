@@ -1,6 +1,12 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useAuth } from "../context/authContext";
 import { Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react"; // 🌟 Mantenemos el estilo premium
+
+type UserWithRole = {
+  role?: { name: string };
+  rol?: { name: string };
+};
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,49 +19,33 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useAuth();
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        <Navigate to="/unauthorized" />;
-        return;
-      }
-
-      if (allowedRoles && user && user.rol) {
-        const userRoleName = user.rol.name.replace("ROLE_", "") as
-          | "ADMIN"
-          | "RECEPTIONIST"
-          | "DOCTOR";
-
-        if (!allowedRoles.includes(userRoleName)) {
-          <Navigate to="/unauthorized" />;
-          return;
-        }
-      }
-    }
-  }, [isAuthenticated, user, isLoading, allowedRoles]);
-
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Cargando...</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="text-center flex flex-col items-center">
+          <Loader2 className="mb-4 h-10 w-10 animate-spin text-teal-600" />
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+            Verificando sesión...
+          </p>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" />;
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />; 
   }
 
-  if (allowedRoles && user && user.rol) {
-    const userRoleName = user.rol.name.replace("ROLE_", "") as
-      | "ADMIN"
-      | "RECEPTIONIST"
+  if (allowedRoles) {
+    const uData = user as unknown as UserWithRole;
+    const rawRoleName = uData?.role?.name || uData?.rol?.name || "";
+    const cleanRoleName = rawRoleName.replace("ROLE_", "") as 
+      | "ADMIN" 
+      | "RECEPTIONIST" 
       | "DOCTOR";
-    if (!allowedRoles.includes(userRoleName)) {
-      return <Navigate to="/unauthorized" />;
+
+    if (!allowedRoles.includes(cleanRoleName)) {
+      return <Navigate to="/unauthorized" replace />;
     }
   }
 
