@@ -7,19 +7,46 @@ import {
   Loader2,
   Lock,
   Unlock,
+  Stethoscope,
+  RefreshCw,
+  AlertTriangle,
+  EyeIcon,
+  EyeOff,
 } from "lucide-react";
 import { AdminLayout } from "../../../components/adminLayout";
 import { doctorService } from "../../../services/doctor.service";
 import type { DoctorDTO } from "../../../models/doctor/doctorDTO";
 import type { DoctorRequestDTO } from "../../../models/doctor/doctorRequestDTO";
+import { toast } from "sonner"; // 🌟 Importamos Sonner
+
+// 🌟 TRADUCTOR DE ERRORES CENTRALIZADO
+const translateError = (err: unknown, defaultMsg: string) => {
+  if (err instanceof Error) {
+    const msg = err.message.toLowerCase();
+    if (msg.includes("409")) return "El nombre de usuario o correo electrónico ya está registrado por otra persona.";
+    if (msg.includes("400")) return "Los datos ingresados no son válidos. Verifica los campos.";
+    if (msg.includes("404")) return "El odontólogo solicitado no fue encontrado en el sistema.";
+    if (msg.includes("500") || msg.includes("502")) return "El servidor está en mantenimiento. Inténtalo de nuevo más tarde.";
+    if (msg.includes("network") || msg.includes("failed to fetch")) return "No hay conexión con el servidor. Revisa tu internet.";
+    return err.message;
+  }
+  return defaultMsg;
+};
 
 export default function DasboardOdontologos() {
   const [doctors, setDoctors] = useState<DoctorDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<DoctorDTO | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [doctorToToggle, setDoctorToToggle] = useState<DoctorDTO | null>(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -49,18 +76,18 @@ export default function DasboardOdontologos() {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const response = await doctorService.getAllPaginated(0, 20);
-      console.log("Doctors API response:", response);
+      setError(null);
+      const response = await doctorService.getAllPaginated(0, 100);
       if (response.ok) {
-        console.log("Doctors data:", response.data.content);
-        console.log("Doctors content:", response.data.content);
-        setDoctors(normalizeDoctors(response.data.content));
+        setDoctors(normalizeDoctors(response.data.content || response.data));
       } else {
-        setError(response.message);
+        throw new Error(response.message || "Error al cargar los doctores");
       }
-    } catch (err) {
-      setError("Error al cargar los doctores");
+    } catch (err: unknown) {
       console.error("Doctors fetch error:", err);
+      const friendlyError = translateError(err, "Error de red al cargar los odontólogos.");
+      setError(friendlyError);
+      toast.error(friendlyError);
     } finally {
       setLoading(false);
     }
@@ -68,6 +95,7 @@ export default function DasboardOdontologos() {
 
   useEffect(() => {
     fetchDoctors();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredDoctors = doctors.filter(
@@ -76,6 +104,8 @@ export default function DasboardOdontologos() {
       getLastName(doctor).toLowerCase().includes(searchTerm.toLowerCase()) ||
       doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  const uniqueSpecialtiesCount = new Set(doctors.filter(d => d.isActive).map(d => d.specialty)).size;
 
   const handleOpenModal = (doctor?: DoctorDTO) => {
     if (doctor) {
@@ -99,28 +129,47 @@ export default function DasboardOdontologos() {
         email: "",
       });
     }
+    setShowPassword(false);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    if (isSaving) return;
     setIsModalOpen(false);
     setEditingDoctor(null);
-    setFormData({
-      name: "",
-      lastName: "",
-      specialty: "",
-      username: "",
-      password: "",
-      email: "",
-    });
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.name.trim() || !formData.lastName.trim() || !formData.specialty) {
+      toast.warning("Por favor complete los campos obligatorios del doctor.");
+      return;
+    }
+
+    if (editingDoctor) {
+      const hasChanges = 
+        formData.name.trim() !== editingDoctor.name ||
+        formData.lastName.trim() !== getLastName(editingDoctor) ||
+        formData.specialty !== editingDoctor.specialty;
+
+      if (!hasChanges) {
+        toast.info("No se detectaron cambios en el perfil del doctor.");
+        handleCloseModal();
+        return;
+      }
+    } else {
+      if (!formData.username.trim() || !formData.email.trim() || !formData.password) {
+        toast.warning("Para un nuevo doctor, debe completar los datos de acceso (Usuario, Email, Contraseña).");
+        return;
+      }
+    }
+
     try {
+      setIsSaving(true);
       const payload = {
-        name: formData.name,
-        lastName: formData.lastName,
+        name: formData.name.trim(),
+        lastName: formData.lastName.trim(),
         specialty: formData.specialty,
         username: formData.username || undefined,
         password: formData.password || undefined,
@@ -129,66 +178,73 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       if (editingDoctor) {
         const response = await doctorService.update(editingDoctor.id, payload);
-        
-        if (response.ok) {
-          alert("Odontólogo actualizado correctamente");
-          fetchDoctors();
-          handleCloseModal();
-        } else {
-          alert("Error al actualizar: " + response.message); 
-        }
+        if (!response.ok) throw new Error(response.message || "400");
+        toast.success("Odontólogo actualizado correctamente");
       } else {
         const response = await doctorService.save(payload);
-        
-        if (response.ok) {
-          alert("Odontólogo registrado correctamente");
-          fetchDoctors();
-          handleCloseModal();
-        } else {
-          alert("Error al registrar: " + response.message);
-        }
+        if (!response.ok) throw new Error(response.message || "400");
+        toast.success("Odontólogo registrado correctamente");
       }
-    } catch (err) {
-      alert("Error de red al guardar el doctor");
+      
+      fetchDoctors();
+      handleCloseModal();
+    } catch (err: unknown) {
       console.error(err);
+      const friendlyError = translateError(err, "Error al guardar el doctor");
+      toast.error(friendlyError);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-const handleToggleLock = async (doctor: DoctorDTO) => {
-    if (!confirm(`¿Estás seguro de ${doctor.isActive ? "desactivar" : "activar"} a ${doctor.name} ${getLastName(doctor)}?`)) {
-      return;
-    }
+  const handleOpenConfirm = (doctor: DoctorDTO) => {
+    setDoctorToToggle(doctor);
+    setIsConfirmOpen(true);
+  };
+
+  const handleCloseConfirm = () => {
+    if (isToggling) return;
+    setIsConfirmOpen(false);
+    setDoctorToToggle(null);
+  };
+
+  const executeToggleLock = async () => {
+    if (!doctorToToggle) return;
     
-    const nuevoEstado = !doctor.isActive;
+    const nuevoEstado = !doctorToToggle.isActive;
     
     try {
+      setIsToggling(true);
       const payload = {
-        id: doctor.id, 
-        name: doctor.name,
-        lastName: getLastName(doctor),
-        specialty: doctor.specialty,
+        id: doctorToToggle.id, 
+        name: doctorToToggle.name,
+        lastName: getLastName(doctorToToggle),
+        specialty: doctorToToggle.specialty,
         isActive: nuevoEstado,
         active: nuevoEstado, 
       };
       
-      console.log("Enviando toggle de doctor:", payload);
-      
-      const response = await doctorService.update(doctor.id, payload as DoctorRequestDTO);
+      const response = await doctorService.update(doctorToToggle.id, payload as DoctorRequestDTO);
       
       if (response.ok) {
+        toast.success(`Odontólogo ${nuevoEstado ? 'activado' : 'desactivado'} con éxito`);
         fetchDoctors();
+        handleCloseConfirm();
       } else {
-        alert("Error del servidor: " + response.message);
+        throw new Error(response.message || "400");
       }
-    } catch (err) {
-      alert("Error de red al cambiar el estado del doctor");
-      console.error(err);
+    } catch (err: unknown) {
+      console.error("Error cambiando estado:", err);
+      const friendlyError = translateError(err, "Error al cambiar el estado del doctor");
+      toast.error(friendlyError);
+    } finally {
+      setIsToggling(false);
     }
   };
 
   return (
     <AdminLayout currentPage="odontologos">
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -201,11 +257,40 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all font-medium"
+            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-medium justify-center"
           >
             <Plus className="w-5 h-5" />
             Nuevo Doctor
           </button>
+        </div>
+
+        {/* Nuevas Tarjetas de Estadísticas para Doctores */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
+            <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Total Equipo</p>
+            <p className="text-3xl font-black text-slate-900 mt-1">{doctors.length}</p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
+            <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Doctores Activos</p>
+            <p className="text-3xl font-black text-emerald-600 mt-1">
+              {doctors.filter((d) => d.isActive).length}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
+            <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Inactivos</p>
+            <p className="text-3xl font-black text-red-500 mt-1">
+              {doctors.filter((d) => !d.isActive).length}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
+            <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Especialidades</p>
+            <p className="text-3xl font-black text-indigo-600 mt-1">
+              {uniqueSpecialtiesCount}
+            </p>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -216,7 +301,7 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
             placeholder="Buscar por nombre, apellido o especialidad..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white"
+            className="w-full pl-12 pr-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white shadow-sm transition-all"
           />
         </div>
 
@@ -224,18 +309,18 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
         <div className="bg-white rounded-xl border border-teal-100 shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-10 h-10 text-teal-500 animate-spin mb-4" />
-              <p className="text-slate-500">Cargando odontólogos...</p>
+              <Loader2 className="w-12 h-12 text-teal-500 animate-spin mb-4" />
+              <p className="text-slate-500 font-medium animate-pulse">Cargando odontólogos...</p>
             </div>
           ) : error ? (
             <div className="text-center py-20 px-4">
-              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-              <p className="text-red-600 font-medium">{error}</p>
+              <AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-4" />
+              <p className="text-red-600 font-medium mb-4">{error}</p>
               <button
                 onClick={fetchDoctors}
-                className="mt-4 px-4 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition-colors"
+                className="mt-4 px-6 py-2 bg-teal-50 text-teal-700 font-bold rounded-lg hover:bg-teal-100 transition-colors flex items-center gap-2 mx-auto"
               >
-                Reintentar
+                <RefreshCw className="w-4 h-4" /> Reintentar
               </button>
             </div>
           ) : (
@@ -243,46 +328,33 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                      Nombre
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                      Apellido
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                      Especialidad
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                      Estado
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                      Acciones
-                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Nombre</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Apellido</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Especialidad</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Estado</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-teal-100">
                   {filteredDoctors.map((doctor) => (
-                    <tr
-                      key={doctor.id}
-                      className="hover:bg-cyan-50/50 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                    <tr key={doctor.id} className="hover:bg-cyan-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900">
                         {doctor.name}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-700">
                         {getLastName(doctor)}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-xs font-bold tracking-wide">
                           {doctor.specialty}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          className={`px-3 py-1 rounded-full text-xs font-bold border ${
                             doctor.isActive
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-red-50 text-red-700 border-red-200"
                           }`}
                         >
                           {doctor.isActive ? "Activo" : "Inactivo"}
@@ -293,24 +365,21 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
                           <button
                             onClick={() => handleOpenModal(doctor)}
                             className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                            title="Editar Doctor"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                              onClick={() => handleToggleLock(doctor)}
-                              className={`rounded-lg p-2 transition-colors ${
-                                doctor.isActive        
-                                  ? "text-yellow-600 hover:bg-yellow-100"
-                                  : "text-green-600 hover:bg-green-100"
-                              }`}
-                              title={doctor.isActive ? "Desactivar" : "Activar"}
-                            >
-                              {doctor.isActive ? (
-                                <Lock className="h-4 w-4" />
-                              ) : (
-                                <Unlock className="h-4 w-4" />
-                              )}
-                            </button>
+                            onClick={() => handleOpenConfirm(doctor)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              doctor.isActive
+                                ? "text-amber-600 hover:bg-amber-100"
+                                : "text-emerald-600 hover:bg-emerald-100"
+                            }`}
+                            title={doctor.isActive ? "Desactivar Doctor" : "Activar Doctor"}
+                          >
+                            {doctor.isActive ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -318,11 +387,12 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
                 </tbody>
               </table>
               {filteredDoctors.length === 0 && (
-                <div className="text-center py-12">
-                  <AlertCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-600">
-                    No se encontraron odontólogos
-                  </p>
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <Search className="w-8 h-8 text-slate-300" />
+                  </div>
+                  <p className="text-slate-600 font-medium text-lg">No se encontraron odontólogos</p>
+                  <p className="text-slate-400 text-sm mt-1">Prueba buscando otra especialidad o nombre.</p>
                 </div>
               )}
             </div>
@@ -330,70 +400,58 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal Formulario */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
             onClick={handleCloseModal}
           />
-          <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50">
-              <h2 className="text-xl font-bold text-slate-900">
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-2xl">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                {editingDoctor ? <Edit2 className="w-5 h-5 text-teal-600"/> : <Plus className="w-5 h-5 text-teal-600"/>}
                 {editingDoctor ? "Editar Doctor" : "Nuevo Doctor"}
               </h2>
             </div>
 
-            {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Nombre
-                  </label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre</label>
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500"
+                    disabled={isSaving}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Apellido
-                  </label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Apellido</label>
                   <input
                     type="text"
                     value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastName: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500"
+                    disabled={isSaving}
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Especialidad
-                </label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Especialidad</label>
                 <select
                   value={formData.specialty}
-                  onChange={(e) =>
-                    setFormData({ ...formData, specialty: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500"
+                  disabled={isSaving}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all bg-white disabled:opacity-60 disabled:bg-slate-50 cursor-pointer"
                 >
-                  <option value="">{formData.specialty ? formData.specialty : "Seleccionar especialidad"}</option>
-                  <option value="Odontología General">
-                    Odontología General
-                  </option>
+                  <option value="" disabled>Seleccionar especialidad</option>
+                  <option value="Odontología General">Odontología General</option>
                   <option value="Ortodoncia">Ortodoncia</option>
                   <option value="Implantología">Implantología</option>
                   <option value="Endodoncia">Endodoncia</option>
@@ -403,75 +461,128 @@ const handleToggleLock = async (doctor: DoctorDTO) => {
 
               {!editingDoctor && (
                 <>
-                  <div className="border-t border-teal-100 pt-4 mt-4">
-                    <p className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4">
-                      Datos de Acceso (Usuario)
+                  <div className="border-t border-teal-100 pt-5 mt-5">
+                    <p className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                      <Stethoscope className="w-4 h-4" /> Datos de Acceso al Sistema
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Usuario (Username)
-                    </label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Usuario (Username)</label>
                     <input
                       type="text"
                       value={formData.username}
-                      onChange={(e) =>
-                        setFormData({ ...formData, username: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500"
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      required={!editingDoctor}
+                      disabled={isSaving}
+                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Email
-                    </label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500"
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required={!editingDoctor}
+                      disabled={isSaving}
+                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Contraseña
-                    </label>
-                    <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) =>
-                        setFormData({ ...formData, password: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:border-teal-500"
-                    />
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required={!editingDoctor}
+                        disabled={isSaving}
+                        placeholder="••••••••"
+                        className="w-full px-4 py-2.5 pr-12 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm disabled:opacity-60 disabled:bg-slate-50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={isSaving}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-600 transition-colors disabled:opacity-50"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <EyeIcon size={20} />}
+                      </button>
+                    </div>
                   </div>
                 </>
               )}
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 px-4 py-2 border border-teal-200 text-slate-700 rounded-lg hover:bg-teal-50 font-medium transition-colors"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-bold disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-lg hover:shadow-lg font-medium transition-all"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
-                  {editingDoctor ? "Actualizar" : "Crear"}
+                  {isSaving ? <><Loader2 className="w-5 h-5 animate-spin"/> Procesando...</> : editingDoctor ? "Actualizar" : "Crear Doctor"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación Elegante para Activar/Desactivar */}
+      {isConfirmOpen && doctorToToggle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={handleCloseConfirm} />
+          <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4 ${doctorToToggle.isActive ? 'bg-amber-100 border-amber-200 border-4' : 'bg-emerald-100 border-emerald-200 border-4'}`}>
+              {doctorToToggle.isActive ? (
+                <AlertTriangle className="h-8 w-8 text-amber-600" />
+              ) : (
+                <Unlock className="h-8 w-8 text-emerald-600" />
+              )}
+            </div>
+            
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              {doctorToToggle.isActive ? "Desactivar Doctor" : "Activar Doctor"}
+            </h3>
+            
+            <p className="text-sm text-slate-500 mb-6 px-2 leading-relaxed">
+              ¿Estás seguro de que deseas {doctorToToggle.isActive ? "quitarle el acceso" : "permitirle el ingreso"} al sistema al Dr/a. <span className="font-bold text-slate-800">{doctorToToggle.name} {getLastName(doctorToToggle)}</span>?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCloseConfirm}
+                disabled={isToggling}
+                className="flex-1 rounded-xl px-4 py-3 font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executeToggleLock}
+                disabled={isToggling}
+                className={`flex-1 rounded-xl px-4 py-3 font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${
+                  doctorToToggle.isActive 
+                    ? 'bg-amber-600 hover:bg-amber-700' 
+                    : 'bg-emerald-600 hover:bg-emerald-700'
+                }`}
+              >
+                {isToggling ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  doctorToToggle.isActive ? "Sí, Desactivar" : "Sí, Activar"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
