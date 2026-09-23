@@ -1,0 +1,11 @@
+services:
+  clinica-frontend:
+    container_name: clinica_frontend_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
