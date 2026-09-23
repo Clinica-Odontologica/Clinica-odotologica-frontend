@@ -57,11 +57,12 @@ docker compose up -d --build
 ```
 
 Esto construirá la imagen y levantará el contenedor en el puerto `80`. Para detener el servicio, utiliza:
+```
 
 ```bash
 docker compose down
-
 ```
+
 
 *(Nota: Asegúrate de configurar tu archivo `.env.production` con la IP o dominio del servidor backend antes de compilar para producción).*
 
