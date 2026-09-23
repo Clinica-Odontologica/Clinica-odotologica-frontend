@@ -7,11 +7,9 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Loader2 } from "lucide-react";
+import { Loader2, PieChart as PieChartIcon } from "lucide-react";
 import { turnService } from "../../../services/turn.service";
 
-
-// 🌟 En lugar de importarlo, usamos la interfaz personalizada que creamos
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{
@@ -28,17 +26,18 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     const data = payload[0].payload;
     
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-        <div className="flex items-center gap-2">
-          {/* Bolita de color indicadora */}
+      <div className="rounded-xl border border-teal-100 bg-white/95 backdrop-blur-sm p-3 md:p-4 shadow-xl">
+        <div className="flex items-center gap-2 mb-1.5">
           <div
-            className="h-3 w-3 rounded-full"
+            className="h-3 w-3 rounded-full shadow-sm"
             style={{ backgroundColor: data.color }}
           />
-          <p className="font-semibold text-slate-800">{data.name}</p>
+          <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider">
+            {data.name}
+          </p>
         </div>
-        <p className="mt-1 text-sm font-medium text-slate-600">
-          Total: <span className="text-slate-900">{data.value} turnos</span>
+        <p className="text-base md:text-lg font-black text-slate-800">
+          Total: <span style={{ color: data.color }}>{data.value}</span> turnos
         </p>
       </div>
     );
@@ -49,16 +48,15 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
 export default function EstadoTurnosChart() {
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState([
-    { name: "Atendidos", value: 0, color: "#0d9488" }, // teal-600 (Éxito)
-    { name: "Pendientes", value: 0, color: "#f59e0b" }, // amber-500 (En espera)
-    { name: "Cancelados", value: 0, color: "#ef4444" }, // red-500 (Pérdida)
+    { name: "Atendidos", value: 0, color: "#0d9488" }, 
+    { name: "Pendientes", value: 0, color: "#f59e0b" }, 
+    { name: "Cancelados", value: 0, color: "#ef4444" }, 
   ]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Traemos todos los turnos (ajusta el size si en tu clínica manejan miles por mes)
         const response = await turnService.getAllPaginated(0, 500);
 
         if (response.ok) {
@@ -68,8 +66,7 @@ export default function EstadoTurnosChart() {
           let pendientes = 0;
           let cancelados = 0;
 
-          // Iteramos y agrupamos según el status que viene de Spring Boot
-          turnos.forEach((turno) => {
+          turnos.forEach((turno: { status?: string }) => {
             const status = turno.status?.toUpperCase() || "";
 
             if (status === "ATENDIDO" || status === "FINALIZADO" || status === "COMPLETADO") {
@@ -77,12 +74,10 @@ export default function EstadoTurnosChart() {
             } else if (status === "CANCELADO") {
               cancelados++;
             } else {
-              // Cualquier otro estado (PROGRAMADO, PENDIENTE, etc.) lo contamos como pendiente
               pendientes++;
             }
           });
 
-          // Actualizamos la data del gráfico
           setChartData([
             { name: "Atendidos", value: atendidos, color: "#0d9488" },
             { name: "Pendientes", value: pendientes, color: "#f59e0b" },
@@ -99,54 +94,64 @@ export default function EstadoTurnosChart() {
     fetchData();
   }, []);
 
-  // Mostrar un loader mientras se traen los datos
   if (loading) {
     return (
-      <div className="flex h-[300px] w-full items-center justify-center">
+      <div className="flex w-full h-[300px] md:h-full min-h-[300px] items-center justify-center min-w-0">
         <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
       </div>
     );
   }
 
-  // Si no hay ningún turno registrado aún, mostramos un mensaje amigable
   const totalTurnos = chartData.reduce((acc, curr) => acc + curr.value, 0);
+  
   if (totalTurnos === 0) {
     return (
-      <div className="flex h-[300px] w-full flex-col items-center justify-center text-slate-500">
-        <p>No hay turnos registrados para graficar.</p>
+      <div className="flex w-full h-[300px] md:h-full min-h-[300px] flex-col items-center justify-center text-center px-4 min-w-0">
+        <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-3 border border-slate-100">
+          <PieChartIcon className="w-6 h-6 text-slate-300" />
+        </div>
+        <p className="font-bold text-slate-600">No hay turnos registrados</p>
+        <p className="text-xs text-slate-400 mt-1 max-w-[200px]">El gráfico se generará cuando hayan citas en el sistema.</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="w-full h-[300px] md:h-full min-h-[300px] min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={chartData}
-            cx="50%" // Centrado horizontal
-            cy="45%" // Un poco más arriba del centro para dejar espacio a la leyenda
-            innerRadius={70} // Esto es lo que lo convierte en un "Donut"
-            outerRadius={100}
-            paddingAngle={3} // Espacio en blanco entre las rebanadas
+            cx="50%" 
+            cy="45%" 
+            // 🌟 Radios reducidos ligeramente (60/90 en lugar de 70/100) para que no se corte en pantallas de 320px
+            innerRadius={60} 
+            outerRadius={90}
+            paddingAngle={4} 
             dataKey="value"
-            stroke="none" // Quita el borde por defecto
+            stroke="none"
+            animationDuration={1000}
           >
             {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.color} 
+                className="hover:opacity-80 transition-opacity outline-none"
+              />
             ))}
           </Pie>
 
           <Tooltip content={<CustomTooltip />} />
 
-          {/* Leyenda en la parte inferior */}
+          {/* Leyenda responsiva */}
           <Legend
             verticalAlign="bottom"
             height={36}
             iconType="circle"
             formatter={(value) => (
-              <span className="font-medium text-slate-700">{value}</span>
+              <span className="font-bold text-xs md:text-sm text-slate-600 ml-1">{value}</span>
             )}
+            wrapperStyle={{ paddingTop: "4px" }}
           />
         </PieChart>
       </ResponsiveContainer>

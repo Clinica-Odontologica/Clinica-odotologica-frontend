@@ -17,7 +17,6 @@ import { treatmentService } from '../../../services/treatment.service';
 import type { ServiceDTO } from '../../../models/service/serviceDTO';
 import { toast } from "sonner"; 
 
-// 🌟 TRADUCTOR DE ERRORES
 const translateError = (err: unknown, defaultMsg: string) => {
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
@@ -108,13 +107,11 @@ export default function DasboardServicios() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validación de campos vacíos
     if (!formData.name.trim() || !formData.basePrice) {
       toast.warning("Por favor complete todos los campos requeridos.");
       return;
     }
 
-    // 🌟 VALIDACIÓN DE CAMBIOS INTELEGENTE (Si estamos editando)
     if (editingService) {
       const hasChanges = 
         formData.name.trim() !== editingService.name ||
@@ -131,7 +128,7 @@ export default function DasboardServicios() {
       setIsSaving(true);
       const serviceData: ServiceDTO = {
         id: formData.id,
-        name: formData.name.trim(), // Le quitamos espacios extra por seguridad
+        name: formData.name.trim(),
         basePrice: parseFloat(formData.basePrice),
         isActive: editingService ? editingService.isActive : true,
       };
@@ -200,68 +197,66 @@ export default function DasboardServicios() {
 
   return (
     <AdminLayout currentPage="servicios">
-      <div className="space-y-6 animate-in fade-in duration-500">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Gestión de Servicios</h1>
-            <p className="text-slate-600 mt-1">Administra tratamientos y precios</p>
+      {/* Contenedor principal con max-w-full y min-w-0 para evitar desbordes */}
+      <div className="space-y-6 animate-in fade-in duration-500 w-full max-w-full min-w-0">
+        
+        {/* Header Responsive */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 truncate">Gestión de Servicios</h1>
+            <p className="text-sm md:text-base text-slate-600 mt-1 truncate">Administra tratamientos y precios</p>
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-medium"
+            className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-bold w-full sm:w-auto shrink-0"
           >
-            <Plus className="w-5 h-5" />
-            Nuevo Servicio
+            <Plus className="w-5 h-5 shrink-0" />
+            <span>Nuevo Servicio</span>
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Total de Servicios</p>
-                <p className="text-3xl font-black text-slate-900 mt-1">{services.length}</p>
-              </div>
-              <div className="w-14 h-14 rounded-full bg-cyan-50 border border-cyan-100 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-cyan-600" />
-              </div>
+        {/*  Stats Cards (Grilla Responsive) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+          <div className="bg-white rounded-2xl border border-teal-100 p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between min-w-0">
+            <div className="min-w-0 mr-2">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1 truncate">Total de Servicios</p>
+              <p className="text-2xl font-black text-slate-900 truncate">{services.length}</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-cyan-50 border border-cyan-100 flex items-center justify-center shrink-0">
+              <FileText className="w-6 h-6 text-cyan-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Precio Promedio</p>
-                <p className="text-3xl font-black text-slate-900 mt-1 flex items-baseline gap-1">
-                  <span className="text-xl text-teal-500">$</span>
-                  {services.length > 0 
-                    ? (services.reduce((sum, s) => sum + s.basePrice, 0) / services.length).toFixed(2)
-                    : '0.00'}
-                </p>
-              </div>
-              <div className="w-14 h-14 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-teal-600" />
-              </div>
+          <div className="bg-white rounded-2xl border border-teal-100 p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between min-w-0">
+            <div className="min-w-0 mr-2">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1 truncate">Precio Promedio</p>
+              <p className="text-2xl font-black text-slate-900 flex items-baseline gap-1 truncate">
+                <span className="text-lg text-teal-500">$</span>
+                {services.length > 0 
+                  ? (services.reduce((sum, s) => sum + s.basePrice, 0) / services.length).toFixed(2)
+                  : '0.00'}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0">
+              <DollarSign className="w-6 h-6 text-teal-600" />
             </div>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        {/* Search Bar - 100% width adaptable */}
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 shrink-0" />
           <input
             type="text"
             placeholder="Buscar por nombre de tratamiento..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white shadow-sm transition-all"
+            className="w-full pl-12 pr-4 py-3 md:py-3.5 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white shadow-sm transition-all text-sm truncate"
           />
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl border border-teal-100 shadow-sm overflow-hidden">
+        {/* Table Container - Control estricto de overflow */}
+        <div className="bg-white rounded-2xl border border-teal-100 shadow-sm w-full overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-12 h-12 text-teal-500 animate-spin mb-4" />
@@ -273,47 +268,55 @@ export default function DasboardServicios() {
               <p className="text-red-600 font-medium mb-4">{error}</p>
               <button 
                 onClick={fetchServices}
-                className="px-6 py-2 bg-teal-50 text-teal-700 font-bold rounded-lg hover:bg-teal-100 transition-colors flex items-center gap-2 mx-auto"
+                className="px-6 py-2.5 bg-teal-50 text-teal-700 font-bold rounded-xl hover:bg-teal-100 transition-colors flex items-center gap-2 mx-auto"
               >
                 <RefreshCw className="w-4 h-4" /> Reintentar
               </button>
             </div>
+          ) : filteredServices.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                <Search className="w-8 h-8 text-slate-300" />
+              </div>
+              <p className="text-slate-600 font-medium text-lg">No se encontraron servicios</p>
+              <p className="text-slate-400 text-sm mt-1">Intenta con otra búsqueda.</p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50">
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">ID</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Servicio</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Precio Base</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Estado</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Acciones</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">ID</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Servicio</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Precio Base</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Estado</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-teal-100">
+                <tbody className="divide-y divide-teal-50">
                   {filteredServices.map((service) => (
                     <tr key={service.id} className="hover:bg-cyan-50/50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-slate-500 font-mono">#{service.id}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-900">{service.name}</td>
-                      <td className="px-6 py-4 text-sm font-black text-teal-600">${service.basePrice.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${service.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                      <td className="px-5 py-4 text-sm text-slate-500 font-mono whitespace-nowrap">#{service.id}</td>
+                      <td className="px-5 py-4 text-sm font-bold text-slate-900 whitespace-nowrap">{service.name}</td>
+                      <td className="px-5 py-4 text-sm font-black text-teal-600 whitespace-nowrap">${service.basePrice.toFixed(2)}</td>
+                      <td className="px-5 py-4 text-sm whitespace-nowrap">
+                        <span className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border ${service.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                           {service.isActive ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2">
+                      <td className="px-5 py-4 text-sm whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleOpenModal(service)}
-                            className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                            className="p-2 hover:bg-blue-100 text-blue-600 rounded-xl transition-all border border-transparent hover:border-blue-200"
                             title="Editar Servicio"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleOpenConfirm(service)} 
-                            className={`p-2 rounded-lg transition-colors ${
-                              service.isActive ? "hover:bg-amber-100 text-amber-600" : "hover:bg-emerald-100 text-emerald-600"
+                            className={`p-2 rounded-xl transition-all border border-transparent ${
+                              service.isActive ? "hover:bg-amber-100 text-amber-600 hover:border-amber-200" : "hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200"
                             }`}
                             title={service.isActive ? "Desactivar Servicio" : "Activar Servicio"}
                           >
@@ -325,37 +328,29 @@ export default function DasboardServicios() {
                   ))}
                 </tbody>
               </table>
-              {filteredServices.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                    <AlertCircle className="w-8 h-8 text-slate-300" />
-                  </div>
-                  <p className="text-slate-600 font-medium text-lg">No se encontraron servicios</p>
-                  <p className="text-slate-400 text-sm mt-1">Intenta con otra búsqueda.</p>
-                </div>
-              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* 🌟 Modal Formulario */}
+      {/*  Modal Formulario RESPONSIVE */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={handleCloseModal} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-2xl">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={handleCloseModal} />
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            
+            <div className="px-6 py-5 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-3xl flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-teal-100 shrink-0">
                 {editingService ? <Edit2 className="w-5 h-5 text-teal-600"/> : <Plus className="w-5 h-5 text-teal-600"/>}
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">
                 {editingService ? 'Editar Servicio' : 'Nuevo Servicio'}
               </h2>
             </div>
 
-            {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Nombre del Servicio</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nombre del Servicio</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -363,12 +358,12 @@ export default function DasboardServicios() {
                   required
                   disabled={isSaving}
                   placeholder="Ej. Limpieza Dental"
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Precio Base ($)</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Precio Base ($)</label>
                 <input
                   type="number"
                   value={formData.basePrice}
@@ -376,10 +371,10 @@ export default function DasboardServicios() {
                   required
                   disabled={isSaving}
                   step="0.01"
-                  min="0"
+                  min="1"
                   max="100000.00"
                   placeholder="0.00"
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                 />
               </div>
 
@@ -388,16 +383,16 @@ export default function DasboardServicios() {
                   type="button"
                   onClick={handleCloseModal}
                   disabled={isSaving}
-                  className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-bold disabled:opacity-50"
+                  className="flex-1 px-4 py-3.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-bold disabled:opacity-50 text-sm md:text-base"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="flex-[2] px-4 py-3.5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm md:text-base"
                 >
-                  {isSaving ? <><Loader2 className="w-5 h-5 animate-spin"/> Procesando...</> : editingService ? 'Actualizar' : 'Crear'}
+                  {isSaving ? <><Loader2 className="w-5 h-5 animate-spin"/> Procesando...</> : editingService ? 'Actualizar' : 'Guardar Servicio'}
                 </button>
               </div>
             </form>
@@ -405,16 +400,16 @@ export default function DasboardServicios() {
         </div>
       )}
 
-      {/* 🌟 Modal de Confirmación Elegante para Desactivar */}
+      {/*  Modal de Confirmación Elegante */}
       {isConfirmOpen && serviceToToggle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={handleCloseConfirm} />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={handleCloseConfirm} />
           <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4 ${serviceToToggle.isActive ? 'bg-amber-100 border-amber-200 border-4' : 'bg-emerald-100 border-emerald-200 border-4'}`}>
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4 ${serviceToToggle.isActive ? 'bg-amber-100 border-amber-50 border-4' : 'bg-emerald-100 border-emerald-50 border-4'}`}>
               {serviceToToggle.isActive ? (
-                <AlertTriangle className="h-8 w-8 text-amber-600" />
+                <AlertTriangle className="h-8 w-8 text-amber-500" />
               ) : (
-                <Unlock className="h-8 w-8 text-emerald-600" />
+                <Unlock className="h-8 w-8 text-emerald-500" />
               )}
             </div>
             
@@ -439,8 +434,8 @@ export default function DasboardServicios() {
                 disabled={isToggling}
                 className={`flex-1 rounded-xl px-4 py-3 font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${
                   serviceToToggle.isActive 
-                    ? 'bg-amber-600 hover:bg-amber-700' 
-                    : 'bg-emerald-600 hover:bg-emerald-700'
+                    ? 'bg-amber-500 hover:bg-amber-600' 
+                    : 'bg-emerald-500 hover:bg-emerald-600'
                 }`}
               >
                 {isToggling ? (

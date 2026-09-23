@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/authContext";
 import { Navigate } from "react-router-dom";
-import { Loader2 } from "lucide-react"; // 🌟 Mantenemos el estilo premium
+import { Loader2 } from "lucide-react";
 
 type UserWithRole = {
   role?: { name: string };
@@ -33,7 +33,7 @@ export function ProtectedRoute({
   }
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />; 
+    return <Navigate to="/" replace />; 
   }
 
   if (allowedRoles) {

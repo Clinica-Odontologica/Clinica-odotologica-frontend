@@ -131,6 +131,7 @@ export default function Perfildashboard() {
       formData.username.trim() !== originalUsername ||
       formData.email.trim() !== originalEmail ||
       formData.password !== ""; 
+      
     if (!hasChanges) {
       toast.info("No se detectaron cambios en el perfil.");
       handleCloseModal();
@@ -143,9 +144,9 @@ export default function Perfildashboard() {
       const pData = profileData as UserResponseDTO & FlexData;
 
       const payloadObj = {
-        username: formData.username,
-        fullname: formData.fullname,
-        email: formData.email,
+        username: formData.username.trim(),
+        fullname: formData.fullname.trim(),
+        email: formData.email.trim(),
         rol: pData.rol || pData.role, 
         password: formData.password ? formData.password : ((pData as UserResponseDTO).password || ""), 
         isActive: pData.isActive ?? pData.active ?? true, 
@@ -191,7 +192,7 @@ export default function Perfildashboard() {
   if (error && !profileData) {
     return (
       <AdminLayout currentPage="perfil">
-        <div className="h-[80vh] flex flex-col items-center justify-center space-y-4 max-w-md mx-auto text-center">
+        <div className="h-[80vh] flex flex-col items-center justify-center space-y-4 max-w-md mx-auto text-center px-4">
           <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-4">
             <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
@@ -199,7 +200,7 @@ export default function Perfildashboard() {
           <p className="text-slate-600">{error}</p>
           <button 
             onClick={fetchProfile}
-            className="mt-6 px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center gap-2 shadow-sm"
+            className="mt-6 px-6 py-3 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto"
           >
             <RefreshCw className="w-4 h-4" />
             Reintentar Conexión
@@ -211,13 +212,14 @@ export default function Perfildashboard() {
 
   return (
     <AdminLayout currentPage={"perfil"}>
-      <main className="mx-auto max-w-4xl p-4 md:p-6 flex flex-col gap-6 animate-in fade-in duration-500">
+      {/*  Contenedor principal con max-w-full y min-w-0 para evitar desbordes */}
+      <main className="mx-auto max-w-4xl w-full min-w-0 flex flex-col gap-6 animate-in fade-in duration-500">
         
-        {/* Encabezado */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">Mi Perfil</h1>
-            <p className="mt-1 text-slate-500">
+        {/* Encabezado Responsive */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 truncate">Mi Perfil</h1>
+            <p className="mt-1 text-sm md:text-base text-slate-500 truncate">
               Gestiona tu información personal
             </p>
           </div>
@@ -226,127 +228,132 @@ export default function Perfildashboard() {
             size="sm" 
             onClick={handleOpenModal}
             disabled={loading}
-            className="shadow-sm hover:shadow transition-all"
+            className="shadow-sm hover:shadow transition-all w-full sm:w-auto shrink-0 flex items-center justify-center py-2.5 sm:py-2"
           >
-            <Edit size={16} className="mr-2" />
-            Editar Datos
+            <Edit size={16} className="mr-2 shrink-0" />
+            <span>Editar Datos</span>
           </Button>
         </div>
 
         {loading && !profileData ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-teal-100 shadow-sm">
             <Loader2 className="w-12 h-12 text-teal-500 animate-spin mb-4" />
             <p className="text-slate-500 font-medium animate-pulse">Cargando tu perfil...</p>
           </div>
         ) : (
-          <>
+          <div className="space-y-6 w-full min-w-0">
             {/* Tarjeta 1: Banner y Avatar */}
-            <Card className="overflow-hidden border border-border p-0 shadow-sm transition-all hover:shadow-md">
-              <div className="h-28 w-full bg-gradient-to-r from-teal-500 to-cyan-600 relative overflow-hidden">
+            <Card className="overflow-hidden border border-teal-100 p-0 shadow-sm transition-all hover:shadow-md w-full min-w-0">
+              <div className="h-24 sm:h-32 w-full bg-gradient-to-r from-teal-500 to-cyan-600 relative overflow-hidden">
                 <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]"></div>
               </div>
-              <div className="relative px-6 pb-8">
-                <div className="absolute -top-12 flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-slate-100 text-4xl font-bold text-teal-700 shadow-md">
+              <div className="relative px-4 sm:px-6 pb-6 sm:pb-8">
+                <div className="absolute -top-10 sm:-top-12 flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full border-4 border-white bg-slate-100 text-3xl sm:text-4xl font-bold text-teal-700 shadow-md">
                   {userInitial}
                 </div>
-                <div className="pt-14">
-                  <h2 className="text-2xl font-bold text-slate-800">{userName}</h2>
-                  <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-slate-500">
-                    <Shield size={16} className="text-teal-600" />
-                    {formatRole}
+                <div className="pt-12 sm:pt-16 min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800 truncate break-words whitespace-normal leading-tight">{userName}</h2>
+                  <p className="mt-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-500 truncate">
+                    <Shield size={16} className="text-teal-600 shrink-0" />
+                    <span className="truncate">{formatRole}</span>
                   </p>
                 </div>
               </div>
             </Card>
 
             {/* Tarjeta 2: Detalles de la Cuenta */}
-            <Card className="border border-border p-6 shadow-sm transition-all hover:shadow-md">
-              <h3 className="mb-6 border-b border-slate-100 pb-4 text-lg font-semibold text-slate-800">
+            <Card className="border border-teal-100 p-4 sm:p-6 shadow-sm transition-all hover:shadow-md w-full min-w-0">
+              <h3 className="mb-5 sm:mb-6 border-b border-slate-100 pb-3 sm:pb-4 text-lg font-semibold text-slate-800 truncate">
                 Detalles de la Cuenta
               </h3>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-slate-500 shadow-inner">
-                    <Mail size={22} className="text-teal-600" />
+              
+              <div className="grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-2 min-w-0">
+                
+                <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 sm:p-3 text-slate-500 shadow-inner shrink-0">
+                    <Mail size={20} className="text-teal-600 sm:w-5 sm:h-5 w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
                       Correo Electrónico
                     </p>
-                    <p className="mt-0.5 font-semibold text-slate-800">
+                    <p className="mt-0.5 text-sm sm:text-base font-semibold text-slate-800 truncate" title={displayData?.email}>
                       {displayData?.email || "Sin correo"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-slate-500 shadow-inner">
-                    <Shield size={22} className="text-indigo-600" />
+                <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 sm:p-3 text-slate-500 shadow-inner shrink-0">
+                    <Shield size={20} className="text-indigo-600 sm:w-5 sm:h-5 w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
                       Nivel de Acceso
                     </p>
-                    <div className="mt-1 inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
-                      {displayRoleStr.replace("ROLE_", "") || "USUARIO"}
+                    <div className="mt-1 inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[10px] sm:text-xs font-bold text-indigo-700 truncate max-w-full">
+                      <span className="truncate">{displayRoleStr.replace("ROLE_", "") || "USUARIO"}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-slate-500 shadow-inner">
-                    <Key size={22} className="text-cyan-600" />
+                <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 sm:p-3 text-slate-500 shadow-inner shrink-0">
+                    <Key size={20} className="text-cyan-600 sm:w-5 sm:h-5 w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">Username</p>
-                    <p className="mt-0.5 font-mono font-semibold text-slate-800">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-slate-500 truncate">Username</p>
+                    <p className="mt-0.5 text-sm sm:text-base font-mono font-semibold text-slate-800 truncate" title={displayData?.username}>
                       {displayData?.username}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-slate-500 shadow-inner">
-                    <BadgeCheck size={22} className="text-emerald-600" />
+                <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 sm:p-3 text-slate-500 shadow-inner shrink-0">
+                    <BadgeCheck size={20} className="text-emerald-600 sm:w-5 sm:h-5 w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
                       Estado de Cuenta
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="relative flex h-2.5 w-2.5">
+                      <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 shrink-0">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                        <span className="relative inline-flex h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-emerald-500"></span>
                       </span>
-                      <p className="font-semibold text-emerald-600">
+                      <p className="text-sm sm:text-base font-semibold text-emerald-600 truncate">
                         Autenticado
                       </p>
                     </div>
                   </div>
                 </div>
+
               </div>
             </Card>
-          </>
+          </div>
         )}
 
-        {/* Modal de Edición Animado */}
+        {/* Modal de Edición 100% Responsivo */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div
-              className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
               onClick={handleCloseModal}
             />
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-y-auto max-h-[90vh] animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-5 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-3xl flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-teal-100 shrink-0">
                   <Edit size={20} className="text-teal-600" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 truncate">
                   Actualizar Datos
                 </h2>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                     Nombre Completo
                   </label>
                   <input
@@ -357,13 +364,13 @@ export default function Perfildashboard() {
                     }
                     required
                     disabled={isSaving}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                       Username
                     </label>
                     <input
@@ -374,12 +381,12 @@ export default function Perfildashboard() {
                       }
                       required
                       disabled={isSaving}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                       Email
                     </label>
                     <input
@@ -390,15 +397,15 @@ export default function Perfildashboard() {
                       }
                       required
                       disabled={isSaving}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex justify-between">
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex justify-between items-center">
                     <span>Contraseña</span>
-                    <span className="text-xs font-normal text-slate-400">Opcional (Dejar en blanco para mantener)</span>
+                    <span className="text-[10px] sm:text-xs font-normal text-slate-400">Opcional</span>
                   </label>
                   <div className="relative">
                     <input
@@ -408,42 +415,44 @@ export default function Perfildashboard() {
                         setFormData({ ...formData, password: e.target.value })
                       }
                       disabled={isSaving}
-                      placeholder="••••••••"
-                      className="w-full px-4 py-2.5 pr-12 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm disabled:opacity-60 disabled:bg-slate-50"
+                      placeholder="Dejar en blanco para mantener"
+                      className="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm disabled:opacity-60 disabled:bg-slate-50 shadow-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       disabled={isSaving}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-600 transition-colors disabled:opacity-50"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-600 transition-colors disabled:opacity-50 p-1"
                     >
                       {showPassword ? (
-                        <EyeIcon size={20} />
+                        <EyeOff size={18} />
                       ) : (
-                        <EyeOff size={20} />
+                        <EyeIcon size={18} />
                       )}
                     </button>
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  <Button
-                    variant="soft"
+                <div className="flex gap-3 pt-5 border-t border-slate-100">
+                  <button
                     type="button"
                     onClick={handleCloseModal}
                     disabled={isSaving}
-                    className="flex-1 rounded-xl"
+                    className="flex-1 rounded-xl border border-slate-200 px-4 py-3.5 font-bold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 text-sm"
                   >
                     Cancelar
-                  </Button>
-                  <Button
-                    variant="solid"
+                  </button>
+                  <button
                     type="submit"
-                    loading={isSaving}
-                    className="flex-1 rounded-xl bg-teal-600 hover:bg-teal-700 text-white"
+                    disabled={isSaving}
+                    className="flex-[2] rounded-xl bg-gradient-to-r from-cyan-500 to-teal-600 px-4 py-3.5 font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center gap-2 text-sm"
                   >
-                    {isSaving ? "Guardando..." : "Guardar Cambios"}
-                  </Button>
+                    {isSaving ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" /> Guardando...</>
+                    ) : (
+                      "Guardar Cambios"
+                    )}
+                  </button>
                 </div>
               </form>
             </div>

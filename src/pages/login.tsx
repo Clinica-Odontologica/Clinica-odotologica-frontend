@@ -74,39 +74,47 @@ function Login() {
 
   return (
     <>
-      <main className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-sm">
-          {/* Decorative elements */}
-          <div className="absolute top-10 right-10 w-32 h-32 bg-cyan-200/30 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 left-10 w-40 h-40 bg-teal-200/30 rounded-full blur-3xl"></div>
+      {/* 🌟 100dvh asegura que el fondo no se rompa cuando aparece el teclado en iOS/Android */}
+      <main className="min-h-[100dvh] bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50 flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden relative">
+        
+        {/* Decorative elements - Movidos atrás con z-0 */}
+        <div className="absolute top-10 right-10 w-32 h-32 md:w-64 md:h-64 bg-cyan-200/30 rounded-full blur-3xl z-0 pointer-events-none"></div>
+        <div className="absolute bottom-10 left-10 w-40 h-40 md:w-72 md:h-72 bg-teal-200/30 rounded-full blur-3xl z-0 pointer-events-none"></div>
 
-          {/* Card */}
-          <div className="relative bg-white rounded-2xl shadow-xl p-8 border border-teal-100 animate-in fade-in zoom-in-95 duration-500">
+        {/* 🌟 Contenedor de la Tarjeta con z-10 para estar por encima de los decorados */}
+        <div className="w-full max-w-[400px] z-10">
+          
+          <div className="bg-white rounded-3xl shadow-xl shadow-teal-900/5 p-6 sm:p-8 md:p-10 border border-teal-100/50 animate-in fade-in zoom-in-95 duration-500 backdrop-blur-sm relative overflow-hidden">
+            
+            {/* Brillo decorativo sutil dentro de la tarjeta */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-teal-500"></div>
+
             {/* Header */}
-            <div className="mb-8">
-              <div className="inline-block px-3 py-1 bg-gradient-to-r from-cyan-100 to-teal-100 rounded-full text-xs font-semibold text-teal-700 mb-4 shadow-sm">
-                Sistema de Gestión Dental
+            <div className="mb-8 text-center sm:text-left">
+              <div className="inline-flex px-3 py-1 bg-teal-50 border border-teal-100/50 rounded-full text-[11px] font-bold tracking-wider uppercase text-teal-600 mb-4 shadow-sm mx-auto sm:mx-0">
+                Clínica Odontológica
               </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-700 to-teal-700 bg-clip-text text-transparent mb-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight mb-1">
                 Bienvenido
               </h1>
-              <p className="text-slate-600 text-sm">
-                Acceso seguro para profesionales
+              <p className="text-slate-500 text-sm font-medium">
+                Ingresa tus credenciales para acceder.
               </p>
             </div>
 
-            {/* Renderizado de Errores del Contexto (Traducido) */}
+            {/* Renderizado de Errores del Contexto */}
             {error && (
-              <div className="mb-5 p-3 bg-red-50 text-red-700 text-sm font-medium rounded-lg border border-red-200 text-center animate-in slide-in-from-top-2">
+              <div className="mb-6 p-3.5 bg-red-50 text-red-600 text-sm font-semibold rounded-xl border border-red-100 flex items-center justify-center text-center animate-in slide-in-from-top-2">
                 {getFriendlyContextError(error)}
               </div>
             )}
 
             {/* Form */}
             <form className="space-y-5" onSubmit={handleForm}>
+              
               {/* Email */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">
                   Email Profesional
                 </label>
                 <input
@@ -116,13 +124,13 @@ function Login() {
                   disabled={isLoading}
                   required
                   placeholder="nombre@clinica.com"
-                  className="w-full px-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-teal-50/50 disabled:opacity-60"
+                  className="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-slate-50/50 hover:bg-slate-50 disabled:opacity-60 shadow-sm"
                 />
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -133,13 +141,13 @@ function Login() {
                     disabled={isLoading}
                     required
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-12 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-teal-50/50 disabled:opacity-60"
+                    className="w-full px-4 py-3.5 pr-12 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm bg-slate-50/50 hover:bg-slate-50 disabled:opacity-60 shadow-sm"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-600 hover:text-teal-700 transition-colors disabled:opacity-50"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-600 transition-colors disabled:opacity-50"
                   >
                     {showPassword ? <EyeOff size={20} /> : <EyeIcon size={20} />}
                   </button>
@@ -150,12 +158,12 @@ function Login() {
               <button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white font-semibold py-3.5 rounded-xl transition-all shadow-[0_8px_20px_rgba(13,148,136,0.3)] hover:shadow-[0_8px_25px_rgba(13,148,136,0.4)] mt-8 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 disabled:shadow-none hover:-translate-y-0.5 disabled:transform-none"
+                className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold tracking-wide py-3.5 rounded-xl transition-all shadow-lg shadow-teal-600/20 hover:shadow-teal-600/30 mt-8 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 disabled:shadow-none hover:-translate-y-0.5 disabled:transform-none"
               >
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Conectando...
+                    Autenticando...
                   </>
                 ) : (
                   "Acceder al Sistema"
@@ -164,14 +172,25 @@ function Login() {
             </form>
 
             {/* Security Info */}
-            <div className="mt-6 p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2">
-              <span className="text-teal-600 shrink-0">🔒</span>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                <span className="font-semibold text-slate-700">Conexión Segura.</span> Tu información
-                está protegida con encriptación de nivel médico.
+            <div className="mt-8 pt-6 border-t border-slate-100 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center shrink-0 border border-teal-100">
+                <span className="text-teal-600 text-sm">🔒</span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed mt-0.5">
+                <span className="font-bold text-slate-700 block mb-0.5">Conexión Segura</span> 
+                Información protegida con encriptación para entornos médicos.
               </p>
             </div>
+            
           </div>
+          
+          {/* Footer Text */}
+          <div className="text-center mt-6">
+            <p className="text-[11px] font-medium text-slate-400">
+              &copy; {new Date().getFullYear()} Clínica Odontológica. Todos los derechos reservados.
+            </p>
+          </div>
+          
         </div>
       </main>
     </>

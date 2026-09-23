@@ -45,7 +45,6 @@ export default function NuevoTurnoPage() {
     treatment_ids: [] as number[],
   });
 
-  // 🌟 OBTENEMOS LA FECHA Y HORA LOCAL (Evita bugs de zona horaria)
   const now = new Date();
   const localYear = now.getFullYear();
   const localMonth = String(now.getMonth() + 1).padStart(2, "0");
@@ -93,7 +92,6 @@ export default function NuevoTurnoPage() {
     fetchInitialData();
   }, []);
 
-  // 🌟 Limpiar la hora si el usuario cambia a "hoy" y la hora que tenía elegida ya pasó
   useEffect(() => {
     if (formData.date === today && formData.time && formData.time < currentTime) {
       setFormData((prev) => ({ ...prev, time: "" }));
@@ -156,7 +154,6 @@ export default function NuevoTurnoPage() {
       return;
     }
 
-    // 🌟 Doble validación de hora al enviar (por si dejó la pestaña abierta)
     if (formData.date === today && formData.time < currentTime) {
       toast.error("La hora seleccionada ya ha pasado. Por favor actualice el horario.");
       return;
@@ -241,7 +238,7 @@ export default function NuevoTurnoPage() {
   if (pageError) {
     return (
       <ReceptionLayout currentPage="agenda">
-        <div className="h-[80vh] flex flex-col items-center justify-center space-y-4 max-w-md mx-auto text-center">
+        <div className="h-[80vh] flex flex-col items-center justify-center space-y-4 max-w-md mx-auto text-center px-4">
           <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-4">
             <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
@@ -261,30 +258,31 @@ export default function NuevoTurnoPage() {
 
   return (
     <ReceptionLayout currentPage="agenda">
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-900">
+      <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500">
+        <div className="px-1 md:px-0">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900">
             Agendar Nuevo Turno
           </h2>
-          <p className="text-slate-600 mt-1">
+          <p className="text-sm md:text-base text-slate-600 mt-1">
             Complete los campos para registrar un nuevo turno
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6"
         >
-          <div className="lg:col-span-2 space-y-6">
+          {/* LADO IZQUIERDO: FORMULARIOS */}
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             
-            {/* Patient Search */}
-            <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-100 to-teal-100 rounded-lg flex items-center justify-center shadow-inner">
+            {/* 1. Patient Search */}
+            <div className="bg-white rounded-xl border border-teal-100 p-4 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 md:mb-6">
+                <div className="w-10 h-10 shrink-0 bg-gradient-to-br from-cyan-100 to-teal-100 rounded-lg flex items-center justify-center shadow-inner">
                   <User className="w-5 h-5 text-teal-700" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">1. Seleccionar Paciente</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900">1. Seleccionar Paciente</h3>
                   <p className="text-xs text-slate-500">Busque por DNI, Nombre o Apellido</p>
                 </div>
               </div>
@@ -300,10 +298,10 @@ export default function NuevoTurnoPage() {
                     onFocus={() => setShowDropdown(true)}
                     onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                     maxLength={50}
-                    className="flex-1 focus:outline-none text-sm text-slate-800 bg-transparent placeholder-slate-400 font-medium"
+                    className="flex-1 w-full focus:outline-none text-sm text-slate-800 bg-transparent placeholder-slate-400 font-medium truncate"
                   />
                   {foundPatient && (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 ml-2 animate-in zoom-in" />
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 ml-2 shrink-0 animate-in zoom-in" />
                   )}
                 </div>
 
@@ -318,7 +316,7 @@ export default function NuevoTurnoPage() {
                             onClick={() => handleSelectPatient(p)}
                             className="px-4 py-3 hover:bg-teal-50/80 rounded-lg cursor-pointer transition-all flex flex-col gap-1.5"
                           >
-                            <p className="font-bold text-slate-800 text-sm">
+                            <p className="font-bold text-slate-800 text-sm break-words">
                               {p.name} {p.last_name || p.last_name}
                             </p>
                             <p className="text-[11px] font-mono font-semibold text-teal-700 bg-teal-100/50 self-start px-2 py-0.5 rounded border border-teal-100">
@@ -328,7 +326,7 @@ export default function NuevoTurnoPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="px-4 py-10 text-sm text-slate-500 text-center flex flex-col items-center gap-3">
+                      <div className="px-4 py-8 md:py-10 text-sm text-slate-500 text-center flex flex-col items-center gap-3">
                         <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center">
                           <User className="w-6 h-6 text-slate-400" />
                         </div>
@@ -343,31 +341,32 @@ export default function NuevoTurnoPage() {
               </div>
 
               {foundPatient && (
-                <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl flex justify-between items-center animate-in fade-in slide-in-from-top-2 shadow-sm">
+                /* 🌟 CORREGIDO: Diseño en columna interna para que la etiqueta nunca se desborde */
+                <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl flex flex-col items-start sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 shadow-sm">
                   <div>
-                    <p className="font-bold text-emerald-950 text-lg">
+                    <p className="font-bold text-emerald-950 text-base md:text-lg break-words">
                       {foundPatient.name} {foundPatient.last_name || foundPatient.last_name}
                     </p>
-                    <p className="text-sm text-emerald-700 mt-1 font-medium flex items-center gap-2">
+                    <p className="text-sm text-emerald-700 mt-0.5 font-medium flex items-center gap-2">
                       <span className="opacity-70">DNI:</span> {foundPatient.dni}
                     </p>
                   </div>
-                  <div className="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold border border-emerald-200 shadow-sm flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
+                  <div className="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold border border-emerald-200 shadow-sm flex items-center gap-1.5 shrink-0">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
                     Paciente Confirmado
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Doctor Selection */}
-            <div className={`bg-white rounded-xl border transition-colors duration-300 p-6 shadow-sm ${formData.patient_id ? 'border-teal-100' : 'border-slate-100 opacity-60 pointer-events-none'}`}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-inner ${formData.patient_id ? 'bg-gradient-to-br from-cyan-100 to-teal-100' : 'bg-slate-100'}`}>
+            {/* 2. Doctor Selection */}
+            <div className={`bg-white rounded-xl border transition-colors duration-300 p-4 sm:p-6 shadow-sm ${formData.patient_id ? 'border-teal-100' : 'border-slate-100 opacity-60 pointer-events-none'}`}>
+              <div className="flex items-center gap-3 mb-5 md:mb-6">
+                <div className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center shadow-inner ${formData.patient_id ? 'bg-gradient-to-br from-cyan-100 to-teal-100' : 'bg-slate-100'}`}>
                   <Stethoscope className={`w-5 h-5 ${formData.patient_id ? 'text-teal-700' : 'text-slate-400'}`} />
                 </div>
                 <div>
-                  <h3 className={`text-lg font-semibold ${formData.patient_id ? 'text-slate-900' : 'text-slate-500'}`}>
+                  <h3 className={`text-base md:text-lg font-semibold ${formData.patient_id ? 'text-slate-900' : 'text-slate-500'}`}>
                     2. Odontólogo
                   </h3>
                 </div>
@@ -384,16 +383,16 @@ export default function NuevoTurnoPage() {
                       key={doctor.id}
                       type="button"
                       onClick={() => setFormData({ ...formData, doctor_id: doctor.id })}
-                      className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      className={`p-3.5 md:p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-center ${
                         formData.doctor_id === doctor.id
                           ? "border-teal-500 bg-teal-50 shadow-sm ring-1 ring-teal-500/20"
                           : "border-slate-200 bg-white hover:border-teal-300 hover:bg-slate-50"
                       }`}
                     >
-                      <p className="font-bold text-slate-800 text-sm">
+                      <p className="font-bold text-slate-800 text-sm break-words leading-tight">
                         Dr. {doctor.name} {doctor.lastName}
                       </p>
-                      <p className={`text-xs mt-1.5 font-medium px-2 py-0.5 rounded inline-block ${formData.doctor_id === doctor.id ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-600'}`}>
+                      <p className={`text-xs mt-2 font-medium px-2 py-0.5 rounded self-start ${formData.doctor_id === doctor.id ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-600'}`}>
                         {doctor.specialty}
                       </p>
                     </button>
@@ -402,33 +401,32 @@ export default function NuevoTurnoPage() {
               )}
             </div>
 
-            {/* Date and Time */}
-            <div className={`bg-white rounded-xl border transition-colors duration-300 p-6 shadow-sm ${formData.doctor_id ? 'border-teal-100' : 'border-slate-100 opacity-60 pointer-events-none'}`}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-inner ${formData.doctor_id ? 'bg-gradient-to-br from-cyan-100 to-teal-100' : 'bg-slate-100'}`}>
+            {/* 3. Date and Time */}
+            <div className={`bg-white rounded-xl border transition-colors duration-300 p-4 sm:p-6 shadow-sm ${formData.doctor_id ? 'border-teal-100' : 'border-slate-100 opacity-60 pointer-events-none'}`}>
+              <div className="flex items-center gap-3 mb-5 md:mb-6">
+                <div className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center shadow-inner ${formData.doctor_id ? 'bg-gradient-to-br from-cyan-100 to-teal-100' : 'bg-slate-100'}`}>
                   <Calendar className={`w-5 h-5 ${formData.doctor_id ? 'text-teal-700' : 'text-slate-400'}`} />
                 </div>
-                <h3 className={`text-lg font-semibold ${formData.doctor_id ? 'text-slate-900' : 'text-slate-500'}`}>
+                <h3 className={`text-base md:text-lg font-semibold ${formData.doctor_id ? 'text-slate-900' : 'text-slate-500'}`}>
                   3. Fecha y Hora
                 </h3>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <input
                   type="date"
                   min={today}
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-400 text-sm font-medium text-slate-700 shadow-sm cursor-pointer transition-all"
+                  className="w-full px-4 py-3 md:py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-400 text-sm font-medium text-slate-700 shadow-sm cursor-pointer transition-all"
                 />
                 <select
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-400 text-sm font-medium text-slate-700 bg-white shadow-sm cursor-pointer transition-all disabled:opacity-50"
+                  className="w-full px-4 py-3 md:py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-400 text-sm font-medium text-slate-700 bg-white shadow-sm cursor-pointer transition-all disabled:opacity-50"
                   disabled={!formData.date}
                 >
                   <option value="" disabled>Seleccione un horario</option>
                   {availableTimes.map((time) => {
-                    // 🌟 Verificamos si la hora ya pasó (solo si la fecha es hoy)
                     const isPastTime = formData.date === today && time < currentTime;
                     return (
                       <option key={time} value={time} disabled={isPastTime} className={isPastTime ? "text-slate-300" : ""}>
@@ -440,17 +438,17 @@ export default function NuevoTurnoPage() {
               </div>
             </div>
 
-            {/* Treatments */}
-            <div className={`bg-white rounded-xl border transition-colors duration-300 p-6 shadow-sm ${formData.date && formData.time ? 'border-teal-100' : 'border-slate-100 opacity-60 pointer-events-none'}`}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-inner ${formData.date && formData.time ? 'bg-gradient-to-br from-cyan-100 to-teal-100' : 'bg-slate-100'}`}>
+            {/* 4. Treatments */}
+            <div className={`bg-white rounded-xl border transition-colors duration-300 p-4 sm:p-6 shadow-sm ${formData.date && formData.time ? 'border-teal-100' : 'border-slate-100 opacity-60 pointer-events-none'}`}>
+              <div className="flex items-center gap-3 mb-5 md:mb-6">
+                <div className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center shadow-inner ${formData.date && formData.time ? 'bg-gradient-to-br from-cyan-100 to-teal-100' : 'bg-slate-100'}`}>
                   <FileText className={`w-5 h-5 ${formData.date && formData.time ? 'text-teal-700' : 'text-slate-400'}`} />
                 </div>
                 <div>
-                  <h3 className={`text-lg font-semibold ${formData.date && formData.time ? 'text-slate-900' : 'text-slate-500'}`}>
+                  <h3 className={`text-base md:text-lg font-semibold ${formData.date && formData.time ? 'text-slate-900' : 'text-slate-500'}`}>
                     4. Tratamientos
                   </h3>
-                  <p className="text-xs text-slate-500">Puede seleccionar más de uno</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Puede seleccionar más de uno</p>
                 </div>
               </div>
 
@@ -459,7 +457,8 @@ export default function NuevoTurnoPage() {
                   <p className="text-sm text-slate-500">No hay tratamientos configurados en el sistema.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                /* 🌟 CORREGIDO: 1 columna en móvil y máximo 2 en pantallas medianas para que no se aprieten */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {treatments.map((t) => {
                     const isSelected = formData.treatment_ids.includes(t.id);
                     return (
@@ -467,13 +466,13 @@ export default function NuevoTurnoPage() {
                         key={t.id}
                         type="button"
                         onClick={() => toggleTreatment(t.id)}
-                        className={`p-3.5 rounded-xl border-2 transition-all text-left flex flex-col justify-between min-h-[90px] ${
+                        className={`p-3.5 md:p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-between min-h-[90px] ${
                           isSelected
                             ? "border-teal-500 bg-teal-50 shadow-sm ring-1 ring-teal-500/20"
                             : "border-slate-200 bg-white hover:border-teal-300 hover:bg-slate-50"
                         }`}
                       >
-                        <span className={`text-sm font-bold line-clamp-2 leading-snug ${isSelected ? 'text-teal-900' : 'text-slate-700'}`}>
+                        <span className={`text-sm font-bold line-clamp-2 leading-snug break-words ${isSelected ? 'text-teal-900' : 'text-slate-700'}`}>
                           {t.name}
                         </span>
                         <span className={`text-xs mt-3 font-black tracking-wide ${isSelected ? "text-teal-600" : "text-slate-400"}`}>
@@ -487,9 +486,9 @@ export default function NuevoTurnoPage() {
             </div>
           </div>
 
-          {/* Summary / Sidebar */}
+          {/* LADO DERECHO: SUMMARY / SIDEBAR */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] sticky top-24 space-y-5">
+            <div className="bg-white rounded-xl border border-teal-100 p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] lg:sticky lg:top-24 space-y-4 md:space-y-5">
               <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
                 <span>Resumen</span>
                 {formData.treatment_ids.length > 0 && (
@@ -497,8 +496,8 @@ export default function NuevoTurnoPage() {
                 )}
               </h3>
 
-              <div className="space-y-3.5 text-sm mt-4">
-                <div className={`p-3.5 rounded-xl border transition-colors ${foundPatient ? 'bg-teal-50/50 border-teal-100' : 'bg-slate-50 border-slate-100'}`}>
+              <div className="space-y-3 md:space-y-3.5 text-sm mt-4">
+                <div className={`p-3 md:p-3.5 rounded-xl border transition-colors ${foundPatient ? 'bg-teal-50/50 border-teal-100' : 'bg-slate-50 border-slate-100'}`}>
                   <p className={`text-[10px] uppercase font-bold tracking-wider ${foundPatient ? 'text-teal-600' : 'text-slate-400'}`}>
                     1. Paciente
                   </p>
@@ -509,7 +508,7 @@ export default function NuevoTurnoPage() {
                   </p>
                 </div>
 
-                <div className={`p-3.5 rounded-xl border transition-colors ${selectedDoctor ? 'bg-cyan-50/50 border-cyan-100' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`p-3 md:p-3.5 rounded-xl border transition-colors ${selectedDoctor ? 'bg-cyan-50/50 border-cyan-100' : 'bg-slate-50 border-slate-100'}`}>
                   <p className={`text-[10px] uppercase font-bold tracking-wider ${selectedDoctor ? 'text-cyan-600' : 'text-slate-400'}`}>
                     2. Odontólogo
                   </p>
@@ -520,11 +519,11 @@ export default function NuevoTurnoPage() {
                   </p>
                 </div>
 
-                <div className={`p-3.5 rounded-xl border transition-colors ${formData.date && formData.time ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`p-3 md:p-3.5 rounded-xl border transition-colors ${formData.date && formData.time ? 'bg-amber-50/50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
                   <p className={`text-[10px] uppercase font-bold tracking-wider ${formData.date && formData.time ? 'text-amber-600' : 'text-slate-400'}`}>
                     3. Fecha y Hora
                   </p>
-                  <div className="flex items-center gap-2 mt-1.5">
+                  <div className="flex items-center flex-wrap gap-2 mt-1.5">
                     <span className={`font-semibold px-2 py-0.5 rounded border ${formData.date ? 'bg-white border-amber-200 text-slate-900 shadow-sm' : 'bg-slate-100 border-slate-200 text-slate-400'}`}>
                       {formData.date
                         ? formData.date.split("-").reverse().join("/")
@@ -537,14 +536,14 @@ export default function NuevoTurnoPage() {
                   </div>
                 </div>
 
-                <div className="p-5 bg-slate-900 rounded-xl border border-slate-800 shadow-lg mt-6 relative overflow-hidden">
+                <div className="p-4 md:p-5 bg-slate-900 rounded-xl border border-slate-800 shadow-lg mt-5 md:mt-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                   
                   <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest relative z-10">
                     Total Estimado
                   </p>
-                  <p className="text-3xl font-black text-white mt-1 relative z-10 flex items-baseline gap-1">
-                    <span className="text-xl text-teal-400">$</span>
+                  <p className="text-2xl md:text-3xl font-black text-white mt-1 relative z-10 flex items-baseline gap-1">
+                    <span className="text-lg md:text-xl text-teal-400">$</span>
                     {totalCost.toFixed(2)}
                   </p>
                   
@@ -562,7 +561,7 @@ export default function NuevoTurnoPage() {
               <button
                 type="submit"
                 disabled={isSaving || formData.treatment_ids.length === 0}
-                className="w-full mt-2 px-4 py-4 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:shadow-none text-white rounded-xl font-bold shadow-[0_8px_20px_rgba(13,148,136,0.3)] hover:shadow-[0_8px_25px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:transform-none"
+                className="w-full mt-4 md:mt-2 px-4 py-3.5 md:py-4 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:shadow-none text-white rounded-xl font-bold shadow-[0_8px_20px_rgba(13,148,136,0.3)] hover:shadow-[0_8px_25px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:transform-none"
               >
                 {isSaving ? (
                   <>
@@ -571,7 +570,7 @@ export default function NuevoTurnoPage() {
                   </>
                 ) : (
                   <>
-                    <Calendar className="w-5 h-5" />
+                    <Calendar className="w-5 h-5 shrink-0" />
                     Confirmar Turno
                   </>
                 )}

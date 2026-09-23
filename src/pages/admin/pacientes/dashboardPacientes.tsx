@@ -132,7 +132,6 @@ export default function DashboardPacientes() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validación Frontend Básica
     if (!formData.dni.trim() || !formData.name.trim() || !formData.last_name.trim()) {
       toast.warning("Por favor complete los campos obligatorios (DNI, Nombre, Apellido).");
       return;
@@ -156,11 +155,11 @@ export default function DashboardPacientes() {
     try {
       setIsSaving(true);
       const payload: PatientRequestDTO = {
-        dni: formData.dni,
-        name: formData.name,
-        last_name: formData.last_name,
-        phone: formData.phone || undefined,
-        email: formData.email || undefined,
+        dni: formData.dni.trim(),
+        name: formData.name.trim(),
+        last_name: formData.last_name.trim(),
+        phone: formData.phone.trim() || undefined,
+        email: formData.email.trim() || undefined,
         isActive: editingPatient ? editingPatient.isActive : true, 
       };
 
@@ -230,76 +229,75 @@ export default function DashboardPacientes() {
 
   const pageContent = (
     <>
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Gestión de Pacientes</h1>
-            <p className="text-slate-600 mt-1">Administra el expediente de pacientes</p>
+      {/*  Contenedor anti-desborde para todo el layout */}
+      <div className="space-y-6 animate-in fade-in duration-500 w-full max-w-full min-w-0">
+        
+        {/* Header Responsive */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 truncate">Gestión de Pacientes</h1>
+            <p className="text-sm md:text-base text-slate-600 mt-1 truncate">Administra el expediente de pacientes</p>
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all font-medium hover:-translate-y-0.5"
+            className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all font-bold hover:-translate-y-0.5 w-full sm:w-auto shrink-0"
           >
-            <Plus className="w-5 h-5" />
-            Nuevo Paciente
+            <Plus className="w-5 h-5 shrink-0" />
+            <span>Nuevo Paciente</span>
           </button>
         </div>
 
-        {/* Nuevas Tarjetas de Estadísticas para Pacientes */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Total Pacientes</p>
-                <p className="text-3xl font-black text-slate-900 mt-1">{patients.length}</p>
-              </div>
-              <div className="w-14 h-14 rounded-full bg-cyan-50 border border-cyan-100 flex items-center justify-center">
-                <Users className="w-6 h-6 text-cyan-600" />
-              </div>
+        {/*  Tarjetas de Estadísticas Responsivas */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+          <div className="bg-white rounded-2xl border border-teal-100 p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between min-w-0">
+            <div className="min-w-0 mr-2">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1 truncate">Total Pacientes</p>
+              <p className="text-2xl font-black text-slate-900 truncate">{patients.length}</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-cyan-50 border border-cyan-100 flex items-center justify-center shrink-0">
+              <Users className="w-6 h-6 text-cyan-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Expedientes Activos</p>
-                <p className="text-3xl font-black text-emerald-600 mt-1">
-                  {patients.filter(p => p.isActive).length}
-                </p>
-              </div>
-              <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                <UserCheck className="w-6 h-6 text-emerald-600" />
-              </div>
+          <div className="bg-white rounded-2xl border border-teal-100 p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between min-w-0">
+            <div className="min-w-0 mr-2">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1 truncate">Expedientes Activos</p>
+              <p className="text-2xl font-black text-emerald-600 truncate">
+                {patients.filter(p => p.isActive).length}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+              <UserCheck className="w-6 h-6 text-emerald-600" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-teal-100 p-6 shadow-sm transition-all hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Inactivos</p>
-                <p className="text-3xl font-black text-red-500 mt-1">
-                  {patients.filter(p => !p.isActive).length}
-                </p>
-              </div>
-              <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
-                <UserX className="w-6 h-6 text-red-500" />
-              </div>
+          <div className="bg-white rounded-2xl border border-teal-100 p-5 shadow-sm transition-all hover:shadow-md flex items-center justify-between min-w-0">
+            <div className="min-w-0 mr-2">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1 truncate">Inactivos</p>
+              <p className="text-2xl font-black text-red-500 truncate">
+                {patients.filter(p => !p.isActive).length}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+              <UserX className="w-6 h-6 text-red-500" />
             </div>
           </div>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        {/* Search Bar Adaptable */}
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 shrink-0" />
           <input
             type="text"
             placeholder="Buscar por nombre, apellido o DNI..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white shadow-sm transition-all"
+            className="w-full pl-12 pr-4 py-3 md:py-3.5 border border-teal-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white shadow-sm transition-all text-sm truncate"
           />
         </div>
 
-        <div className="bg-white rounded-xl border border-teal-100 shadow-sm overflow-hidden">
+        {/*  Contenedor de la Tabla con scroll horizontal */}
+        <div className="bg-white rounded-2xl border border-teal-100 shadow-sm w-full overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-12 h-12 text-teal-500 animate-spin mb-4" />
@@ -311,51 +309,59 @@ export default function DashboardPacientes() {
               <p className="text-red-600 font-medium mb-4">{error}</p>
               <button 
                 onClick={fetchPatients}
-                className="px-6 py-2 bg-teal-50 text-teal-700 font-bold rounded-lg hover:bg-teal-100 transition-colors flex items-center gap-2 mx-auto"
+                className="px-6 py-2.5 bg-teal-50 text-teal-700 font-bold rounded-xl hover:bg-teal-100 transition-colors flex items-center gap-2 mx-auto"
               >
                 <RefreshCw className="w-4 h-4" /> Reintentar
               </button>
             </div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                <Search className="w-8 h-8 text-slate-300" />
+              </div>
+              <p className="text-slate-600 font-medium text-lg">No se encontraron pacientes</p>
+              <p className="text-slate-400 text-sm mt-1">Prueba con otro DNI o nombre.</p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50">
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">DNI</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Nombre</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Apellido</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Teléfono</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Estado</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-800 uppercase tracking-wider">Acciones</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">DNI</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Nombre</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Apellido</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Teléfono</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Email</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap">Estado</th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider whitespace-nowrap text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-teal-100">
+                <tbody className="divide-y divide-teal-50">
                   {filteredPatients.map((patient) => (
                     <tr key={patient.id} className="hover:bg-cyan-50/50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-bold text-slate-700 font-mono">{patient.dni}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-900">{patient.name}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-700">{patient.last_name}</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{patient.phone || <span className="text-slate-400 italic">No registra</span>}</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{patient.email || <span className="text-slate-400 italic">No registra</span>}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${patient.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                      <td className="px-5 py-4 text-sm font-bold text-slate-700 font-mono whitespace-nowrap">{patient.dni}</td>
+                      <td className="px-5 py-4 text-sm font-bold text-slate-900 whitespace-nowrap">{patient.name}</td>
+                      <td className="px-5 py-4 text-sm font-medium text-slate-700 whitespace-nowrap">{patient.last_name}</td>
+                      <td className="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">{patient.phone || <span className="text-slate-400 italic">No registra</span>}</td>
+                      <td className="px-5 py-4 text-sm text-slate-600 whitespace-nowrap">{patient.email || <span className="text-slate-400 italic">No registra</span>}</td>
+                      <td className="px-5 py-4 text-sm whitespace-nowrap">
+                        <span className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border ${patient.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                           {patient.isActive ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2">
+                      <td className="px-5 py-4 text-sm whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleOpenModal(patient)}
-                            className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                            className="p-2 hover:bg-blue-100 text-blue-600 rounded-xl transition-all border border-transparent hover:border-blue-200"
                             title="Editar Paciente"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleOpenConfirm(patient)} 
-                            className={`p-2 rounded-lg transition-colors ${
-                              patient.isActive ? "hover:bg-amber-100 text-amber-600" : "hover:bg-emerald-100 text-emerald-600"
+                            className={`p-2 rounded-xl transition-all border border-transparent ${
+                              patient.isActive ? "hover:bg-amber-100 text-amber-600 hover:border-amber-200" : "hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200"
                             }`}
                             title={patient.isActive ? "Desactivar Expediente" : "Activar Expediente"}
                           >
@@ -367,35 +373,28 @@ export default function DashboardPacientes() {
                   ))}
                 </tbody>
               </table>
-              {filteredPatients.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                    <Search className="w-8 h-8 text-slate-300" />
-                  </div>
-                  <p className="text-slate-600 font-medium text-lg">No se encontraron pacientes</p>
-                  <p className="text-slate-400 text-sm mt-1">Prueba con otro DNI o nombre.</p>
-                </div>
-              )}
             </div>
           )}
         </div>
       </div>
 
-      {/*  Modal Formulario */}
+      {/*  Modal Formulario RESPONSIVE */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={handleCloseModal} />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-2xl">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={handleCloseModal} />
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-teal-100 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-3xl flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-teal-100 shrink-0">
                 {editingPatient ? <Edit2 className="w-5 h-5 text-teal-600"/> : <Plus className="w-5 h-5 text-teal-600"/>}
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">
                 {editingPatient ? 'Editar Paciente' : 'Nuevo Paciente'}
               </h2>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">DNI</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">DNI</label>
                 <input
                   type="text"
                   value={formData.dni}
@@ -403,72 +402,82 @@ export default function DashboardPacientes() {
                   required
                   disabled={isSaving}
                   maxLength={15}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 font-mono"
+                  placeholder="Número de documento"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 font-mono text-sm shadow-sm"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Apilado en móvil, columnas en PC */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nombre</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                     disabled={isSaving}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                    placeholder="Ej: Juan Carlos"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Apellido</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Apellido</label>
                   <input
                     type="text"
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                     required
                     disabled={isSaving}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                    placeholder="Ej: Pérez"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Teléfono <span className="text-xs text-slate-400 font-normal">(Opcional)</span></label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Teléfono <span className="text-xs text-slate-400 font-normal">(Opcional)</span>
+                </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   disabled={isSaving}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                  placeholder="Ej: +51 987654321"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Email <span className="text-xs text-slate-400 font-normal">(Opcional)</span></label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Email <span className="text-xs text-slate-400 font-normal">(Opcional)</span>
+                </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   disabled={isSaving}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50"
+                  placeholder="juan.perez@correo.com"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-slate-100">
+              <div className="flex gap-3 pt-5 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={handleCloseModal}
                   disabled={isSaving}
-                  className="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-bold disabled:opacity-50"
+                  className="flex-1 px-4 py-3.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors font-bold disabled:opacity-50 text-sm md:text-base"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="flex-[2] px-4 py-3.5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none text-sm md:text-base"
                 >
-                  {isSaving ? <><Loader2 className="w-5 h-5 animate-spin"/> Procesando...</> : editingPatient ? 'Actualizar' : 'Registrar'}
+                  {isSaving ? <><Loader2 className="w-5 h-5 animate-spin"/> Procesando...</> : editingPatient ? 'Actualizar' : 'Registrar Paciente'}
                 </button>
               </div>
             </form>
@@ -476,16 +485,16 @@ export default function DashboardPacientes() {
         </div>
       )}
 
-      {/* Modal de Confirmación Elegante para Desactivar Paciente */}
+      {/*  Modal de Confirmación Elegante para Desactivar Paciente */}
       {isConfirmOpen && patientToToggle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={handleCloseConfirm} />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={handleCloseConfirm} />
           <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4 ${patientToToggle.isActive ? 'bg-amber-100 border-amber-200 border-4' : 'bg-emerald-100 border-emerald-200 border-4'}`}>
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4 ${patientToToggle.isActive ? 'bg-amber-100 border-amber-50 border-4' : 'bg-emerald-100 border-emerald-50 border-4'}`}>
               {patientToToggle.isActive ? (
-                <AlertTriangle className="h-8 w-8 text-amber-600" />
+                <AlertTriangle className="h-8 w-8 text-amber-500" />
               ) : (
-                <Unlock className="h-8 w-8 text-emerald-600" />
+                <Unlock className="h-8 w-8 text-emerald-500" />
               )}
             </div>
             
@@ -510,8 +519,8 @@ export default function DashboardPacientes() {
                 disabled={isToggling}
                 className={`flex-1 rounded-xl px-4 py-3 font-bold text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${
                   patientToToggle.isActive 
-                    ? 'bg-amber-600 hover:bg-amber-700' 
-                    : 'bg-emerald-600 hover:bg-emerald-700'
+                    ? 'bg-amber-500 hover:bg-amber-600' 
+                    : 'bg-emerald-500 hover:bg-emerald-600'
                 }`}
               >
                 {isToggling ? (

@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# 🦷 Sistema de Gestión - Clínica Odontológica (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
+Este es el frontend del Sistema de Gestión para Clínica Odontológica, una aplicación web SPA (Single Page Application) diseñada con altos estándares de UI/UX, arquitectura responsiva y enfocada en la experiencia del usuario (Recepcionistas, Odontólogos y Administradores).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Tecnologías Principales
 
-## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Expanding the ESLint configuration
+* **Framework:** [React 18](https://reactjs.org/?utm_source=gemini) + [Vite](https://vitejs.dev/?utm_source=gemini)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* **Lenguaje:** [TypeScript](https://www.typescriptlang.org/?utm_source=gemini)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* **Estilos:** [Tailwind CSS](https://tailwindcss.com/?utm_source=gemini)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+* **Gráficos e Indicadores:** [Recharts](https://recharts.org/?utm_source=gemini)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+* **Iconografía:** [Lucide React](https://lucide.dev/?utm_source=gemini)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+* **Notificaciones:** [Sonner](https://www.google.com/search?q=https://sonner.emilkowal.ski/&utm_source=gemini)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+* **Package Manager:** [Bun](https://bun.sh/?utm_source=gemini) ⚡
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+
+* **Despliegue:** Docker + Nginx
+
+
+
+## 📁 Arquitectura del Proyecto
+
+
+
+El proyecto sigue una arquitectura modular y escalable, separando claramente la lógica de negocio de la vista:
+
+* **`assets/`**: Imágenes, iconos estáticos y variables CSS globales.
+
+
+* **`components/`**: Componentes reutilizables (Botones, Tarjetas, Layouts, Gráficos).
+
+
+* **`context/`**: Estado global (AuthContext para manejo de sesiones).
+
+
+* **`models/`**: Interfaces y DTOs tipados (TypeScript).
+
+
+* **`pages/`**: Vistas de la aplicación (Dashboard, Login, Gestión).
+
+
+* **`services/`**: Lógica de peticiones HTTP (Axios/Fetch) a la API Rest.
+
+
+* **`utils/`**: Constantes, rutas y funciones auxiliares.
+
+
+
+## ✨ Características Destacadas
+
+* **Diseño 100% Responsivo:** Interfaz adaptativa con protección anti-desbordamiento para dispositivos móviles, tablets y escritorio.
+* **Dashboards Interactivos:** Visualización de KPIs financieros, estado de turnos y rendimiento de doctores en tiempo real.
+* **Seguridad y Roles:** Protección de rutas mediante JSON Web Tokens (JWT) y renderizado dinámico según el perfil (`ROLE_ADMIN`, `ROLE_DOCTOR`, `ROLE_RECEPTIONIST`).
+* **Modales Optimizados:** Formularios flotantes con control de capas (`z-index: 60`) y validaciones en tiempo real para evitar pérdida de datos.
+
+## 🛠️ Instalación y Desarrollo Local
+
+1. **Clonar el repositorio:** Descarga el código fuente en tu máquina local.
+2. **Instalar dependencias:** Ejecuta `bun install` para descargar los paquetes necesarios aprovechando la velocidad de Bun.
+3. **Configurar entorno:** Crea un archivo `.env` basado en la configuración de ejemplo y define la variable `VITE_API_URL` apuntando a tu backend.
+4. **Iniciar el servidor:** Ejecuta `bun run dev` para levantar el entorno de desarrollo con Vite.
+
+## 🐳 Despliegue con Docker
+
+El repositorio incluye un `Dockerfile` y la configuración `nginx.conf` listos para contenerizar la aplicación. Para desplegar en producción, construye la imagen con `docker build -t clinica-frontend:latest .` y levanta el contenedor mapeando los puertos correspondientes (ej. `docker run -d -p 80:80 clinica-frontend:latest`).
