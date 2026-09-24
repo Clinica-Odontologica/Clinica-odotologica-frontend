@@ -363,7 +363,7 @@ export default function DashboardPacientes() {
                             className={`p-2 rounded-xl transition-all border border-transparent ${
                               patient.isActive ? "hover:bg-amber-100 text-amber-600 hover:border-amber-200" : "hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200"
                             }`}
-                            title={patient.isActive ? "Desactivar Expediente" : "Activar Expediente"}
+                            title={patient.isActive ? "Desactivar Paciente" : "Activar Paciente"}
                           >
                             {patient.isActive ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                           </button>
@@ -401,7 +401,8 @@ export default function DashboardPacientes() {
                   onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
                   required
                   disabled={isSaving}
-                  maxLength={15}
+                  min={1}
+                  maxLength={9}
                   placeholder="Número de documento"
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 font-mono text-sm shadow-sm"
                 />
@@ -444,6 +445,8 @@ export default function DashboardPacientes() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   disabled={isSaving}
+                  min={1}
+                  maxLength={9}
                   placeholder="Ej: +51 987654321"
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all disabled:opacity-60 disabled:bg-slate-50 text-sm shadow-sm"
                 />
@@ -499,11 +502,11 @@ export default function DashboardPacientes() {
             </div>
             
             <h3 className="text-xl font-bold text-slate-900 mb-2">
-              {patientToToggle.isActive ? "Desactivar Expediente" : "Activar Expediente"}
+              {patientToToggle.isActive ? "Desactivar Paciente" : "Activar Paciente"}
             </h3>
             
             <p className="text-sm text-slate-500 mb-6 px-2 leading-relaxed">
-              ¿Estás seguro de que deseas {patientToToggle.isActive ? "ocultar" : "habilitar"} el perfil de <span className="font-bold text-slate-800">{patientToToggle.name} {patientToToggle.last_name}</span>?
+              ¿Estás seguro de que deseas {patientToToggle.isActive ? "desactivar" : "activar"} el paciente <span className="font-bold text-slate-800">{patientToToggle.name} {patientToToggle.last_name}</span>?
             </p>
 
             <div className="flex gap-3">

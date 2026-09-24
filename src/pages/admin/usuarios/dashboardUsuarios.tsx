@@ -158,7 +158,7 @@ export default function DasboardUsuarios() {
         formData.username.trim() !== editingUser.username ||
         formData.email.trim() !== editingUser.email ||
         formData.rol !== (editingUser.rol?.name || "") ||
-        formData.password !== ""; 
+        formData.password.trim() !== ""; 
 
       if (!hasChanges) {
         toast.info("No se detectaron cambios en el usuario.");
@@ -172,13 +172,19 @@ export default function DasboardUsuarios() {
       const roleObj = getRoleObject(formData.rol);
       
       if (editingUser) {
+        // 🌟 Validar contraseña limpia (sin asteriscos y solo si se escribió algo nuevo)
+        const cleanPassword = 
+          formData.password.trim() !== "" && !formData.password.includes("*") 
+            ? formData.password.trim() 
+            : "";
+
         const response = await userService.update(editingUser.id, {
           fullname: formData.fullname.trim(),
           username: formData.username.trim(),
           email: formData.email.trim(),
           rol: roleObj,
           isActive: formData.isActive,
-          password: formData.password ? formData.password : editingUser.password,
+          password: cleanPassword,
         });
         
         if (response.ok) {
@@ -234,7 +240,7 @@ export default function DasboardUsuarios() {
       const res = await userService.update(userToToggle.id, {
         fullname: userToToggle.fullname,
         username: userToToggle.username,
-        password: userToToggle.password,
+        password: "", 
         email: userToToggle.email,
         rol: userToToggle.rol,
         isActive: !userToToggle.active,
@@ -258,7 +264,6 @@ export default function DasboardUsuarios() {
 
   return (
     <AdminLayout currentPage="usuarios">
-      {/* 🌟 Contenedor principal con max-w-full y min-w-0 para evitar desbordes */}
       <div className="space-y-6 animate-in fade-in duration-500 w-full max-w-full min-w-0">
         
         {/* Header Responsive */}
@@ -280,7 +285,7 @@ export default function DasboardUsuarios() {
           </button>
         </div>
 
-        {/* Stats Cards (Grilla Responsive y Premium) */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
           <div className="bg-white p-5 rounded-2xl border border-teal-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md min-w-0">
             <div className="min-w-0 mr-2">
@@ -329,7 +334,7 @@ export default function DasboardUsuarios() {
           </div>
         </div>
 
-        {/* Search Bar - 🌟 Placeholder y padding ajustados para no empujar bordes */}
+        {/* Search Bar */}
         <div className="relative w-full">
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 shrink-0" />
           <input
@@ -341,7 +346,7 @@ export default function DasboardUsuarios() {
           />
         </div>
 
-        {/* Table Container - 🌟 Estrictamente contenido */}
+        {/* Table Container */}
         <div className="w-full rounded-2xl border border-teal-100 bg-white shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -460,7 +465,7 @@ export default function DasboardUsuarios() {
         </div>
       </div>
 
-      {/* Modal Formulario (Crear/Editar) RESPONSIVE */}
+      {/* Modal Formulario */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -532,7 +537,6 @@ export default function DasboardUsuarios() {
                     <option value="" disabled>Seleccionar Rol</option>
                     <option value="ROLE_ADMIN">Administrador</option>
                     <option value="ROLE_RECEPTIONIST">Recepcionista</option>
-                    <option value="ROLE_DOCTOR">Doctor / Odontólogo</option>
                   </select>
                 </div>
               </div>
@@ -614,7 +618,7 @@ export default function DasboardUsuarios() {
         </div>
       )}
 
-      {/* Modal de Confirmación Elegante */}
+      {/* Modal de Confirmación */}
       {isConfirmOpen && userToToggle && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div
